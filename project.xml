@@ -3,16 +3,13 @@
 	<!-- ____________________________ Window Settings ___________________________ -->
 
 	<!-- CHANGE THE SAVE PATH & NAME FOR YOUR MOD HERE! -->
-	<haxedef name="SAVE_PATH" value="CodenameEngine"/>
+	<haxedef name="SAVE_PATH" value="BfexeOptEngine"/>
 	<haxedef name="SAVE_NAME" value="save-default"/>
 
-	<haxedef name="SAVE_OPTIONS_PATH" value="CodenameEngine"/>
+	<haxedef name="SAVE_OPTIONS_PATH" value="BfexeOptEngine"/>
 	<haxedef name="SAVE_OPTIONS_NAME" value="options"/>
 
-	<!--
-		May be used by the libraries of the engine to check
-		for CNE-specific things. DO NOT comment this out
-	-->
+	<!-- May be used by the libraries of the engine to check for CNE-specific things. DO NOT comment this out -->
 	<haxedef name="cne"/>
 
 	<!-- Comment this out to disable commit number on FPS -->
@@ -21,26 +18,18 @@
 	<!-- Comment this out to disable dark mode windows -->
 	<define name="DARK_MODE_WINDOW"/>
 
-	<!--Switch-specific-->
+	<!-- Switch-specific -->
 	<window if="switch" orientation="landscape" fullscreen="true" width="0" height="0" resizable="true" />
 
 	<!-- _________________________________ Engine Settings _______________________________ -->
 
-	<!-- Comment this out to disable updates !-->
 	<define name="UPDATE_CHECKING" unless="web || hl || neko || debug"/>
 
-	<!-- Comment this out to disable Discord RPC !-->
 	<section if="cpp">
-		<!-- Compile With Discord Rich Presence -->
-		<!-- TODO: Update Discord RPC Library & Rewrite DiscordUtil -->
-		<!-- NOTE before v1.1.0 release: PLEASE DO THIS ABOVE -->
 		<define name="DISCORD_RPC" if="desktop"/>
-
-		<!-- Compile with video support (hxvlc) -->
 		<define name="VIDEO_CUTSCENES" if="desktop || mobile"/>
 	</section>
 
-	<!-- Compile with tracy, use to catch memory leaks, generally, don't use this, inflates memory usages by 16gb~ -->
 	<section if="TRACY">
 		<haxedef name="HXCPP_TELEMETRY"/>
 		<haxedef name="HXCPP_TRACY"/>
@@ -49,80 +38,42 @@
 		<haxedef name="HXCPP_TRACY_INCLUDE_CALLSTACKS"/>
 	</section>
 
-	<!-- Uncomment this to achive faster compile times, will strip extraneous and commonly unused features. -->
 	<!-- <define name="STRIPPED_COMPILE" unless="debug"/> -->
-
-	<!-- Compile with _theo0p's modcharting tools -->
 	<define name="MODCHARTING_FEATURES" unless="STRIPPED_COMPILE"/>
-
-	<!-- Comment this out to disable GitHub API integration !-->
 	<define name="GITHUB_API" unless="web || hl"/>
-
-	<!-- Comment this out to prevent unused classes from being compiled.
-		 Reduces compilation time at the cost of limited HScript flexibility. !-->
 	<define name="COMPILE_ALL_CLASSES" unless="STRIPPED_COMPILE"/>
-
-	<!-- Comment this out to prevent extending classes in hscript.
-		 Reduces compilation time at the cost of limited HScript flexibility. !-->
 	<define name="CUSTOM_CLASSES" unless="STRIPPED_COMPILE"/>
-
-	<!-- Comment this out to disable abstract support in hscript. !-->
 	<haxedef name="HSCRIPT_ABSTRACT_SUPPORT" unless="STRIPPED_COMPILE" />
-
-	<!-- Comment this out to disable multithreading !-->
 	<haxedef name="ALLOW_MULTITHREADING" if="cpp"/>
-
-	<!-- Comment this out to disable mods folder !-->
 	<haxedef name="MOD_SUPPORT" unless="web"/>
-
-	<!-- Comment this out to disable translations folders !-->
 	<haxedef name="TRANSLATIONS_SUPPORT"/>
-
-	<!-- Comment this out to disable global scripts !-->
 	<haxedef name="GLOBAL_SCRIPT"/>
-
-	<!-- Comment this out to disable softcoded states and state scripting !-->
 	<haxedef name="SOFTCODED_STATES"/>
-
-	<!-- Comment this out to disable support for custom ndlls. !-->
 	<haxedef name="NDLLS_SUPPORTED" unless="web || iphonesim || hl"/>
-
-	<!-- Comment this out to use the default OpenFL assets system for the assets/ folder. !-->
 	<define name="USE_ADAPTED_ASSETS" unless="web"/>
-
-	<!-- Comment this out to disable support for 3D rendering (reduces compile times) !-->
 	<define name="THREE_D_SUPPORT" unless="STRIPPED_COMPILE"/>
-
-	<!-- Comment this out to disable support for Nape integration (flixel.addons.nape) (reduces compile times) !-->
 	<define name="NAPE_ENABLED" unless="STRIPPED_COMPILE" />
 
-	<!-- Comment this out to disable video cutscene support, in case of compilation errors. !-->
 	<section if="cpp">
 		<define name="VIDEO_CUTSCENES" if="desktop || android" />
 	</section>
 
-	<!-- Comment this out to disable commit number on FPS -->
 	<define name="SHOW_BUILD_ON_FPS" />
-
-	<!-- Comment this out to disable dark mode windows -->
 	<define name="DARK_MODE_WINDOW"/>
-
-	<!-- Disable a optimization, to allow reflection to use more functions -->
 	<define name="FLX_NO_GENERIC"/>
 
 	<!-- _________________________ Application Settings _________________________ -->
 	<app
-		title="Friday Night Funkin' - Codename Engine"
-		file="CodenameEngine" packageName="com.yoshman29.codenameengine"
+		title="Dejection"
+		file="dejection"
+		packageName="com.yoshman29.codenameengine"
 		package="com.yoshman29.codenameengine"
-		version="1.1.0" company="Yoshman29"/>
+		version="1.1.0"
+		company="Yoshman29"/>
 
-	<!--Switch Export with Unique ApplicationID and Icon-->
 	<set name="APP_ID" value="0x0100f6c013bbc000"/>
 
-	<!--<set name="SWF_VERSION" value="11.8"/>-->
-
-	<!--Place custom nodes like icons here (higher priority to override the HaxeFlixel icon)-->
+	<!-- Icons -->
 	<icon path="art/icon16.png" size='16'/>
 	<icon path="art/icon32.png" size='24'/>
 	<icon path="art/icon32.png" size='32'/>
@@ -147,15 +98,12 @@
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
-	<!-- KEEP BOTH OF THESE AS THERE ARE SOME PARTICULAR CASES! -->
 	<define name="disable-version-check"/>
 	<haxedef name="disable-version-check"/>
 
 	<haxelib name="flixel"/>
-
 	<haxelib name="flixel-addons"/>
 	<haxelib name="flixel-animate"/>
-
 	<haxelib name="hscript-improved"/>
 	<haxelib name="hxWebSockets"/>
 
@@ -175,7 +123,6 @@
 
 	<!-- ____________________________ Source Settings ___________________________ -->
 
-	<!-- DO NO REMOVE THIS -->
 	<haxedef name="REGION"/>
 
 	<set name="BUILD_DIR" value="export/debug" if="debug"/>
@@ -191,7 +138,6 @@
 	<section if="MODCHARTING_FEATURES">
 		<haxedef name="FM_ENGINE" value="CODENAME"/>
 		<haxedef name="FM_ENGINE_VERSION" value="1.0"/>
-
 		<haxelib name="funkin-modchart" />
 		<haxeflag name="--macro" value="modchart.backend.macros.Macro.includeFiles()"/>
 	</section>
@@ -201,18 +147,14 @@
 	<define name="PRELOAD_ALL" unless="web" />
 	<define name="NO_PRELOAD_ALL" unless="PRELOAD_ALL"/>
 
-	<library name="assets"    preload="true"  if="PRELOAD_ALL"/>
-	<library name="assets"    preload="false" if="NO_PRELOAD_ALL" />
+	<library name="assets" preload="true" if="PRELOAD_ALL"/>
+	<library name="assets" preload="false" if="NO_PRELOAD_ALL" />
 
 	<section unless="TEST_BUILD">
-		<assets path="assets/"    rename="assets"	exclude="*.ogg" if="web"/>
-		<assets path="assets/"    rename="assets"	exclude="*.mp3" unless="web"/>
-
-		<!-- TODO: make it copy this manually, instead of using assets node, so it doesn't manually check for fonts -->
-		<assets path='mods' rename='mods' embed='false' />
+		<assets path="assets/" rename="assets" exclude="*.ogg" if="web"/>
+		<assets path="assets/" rename="assets" exclude="*.mp3" unless="web"/>
+		<assets path="mods" rename="mods" embed="false" />
 	</section>
-
-	<!-- <assets path='art/readme.txt' rename='do NOT readme.txt' /> -->
 
 	<!-- ______________________________ Haxedefines _____________________________ -->
 
@@ -225,12 +167,10 @@
 	<haxedef name="SOFTCODED_CLASSES" if="SOFTCODED_CLASSES"/>
 	<haxedef name="USE_ADAPTED_ASSETS" if="USE_ADAPTED_ASSETS"/>
 
-	<!-- Disable it for more concise compilation errors. -->
 	<haxedef name="message.reporting" value="pretty" />
 
 	<!-- _________________________________ Custom _______________________________ -->
 
-	<!--Place custom nodes like icons here (higher priority to override the HaxeFlixel icon)-->
 	<icon path="art/icon16.png" size='16'/>
 	<icon path="art/icon32.png" size='24'/>
 	<icon path="art/icon32.png" size='32'/>
@@ -245,12 +185,9 @@
 	<icon path="art/iconOG.png" size='768' />
 	<icon path="art/iconOG.png" size='1024' />
 
-	<!-- _________________________________ Additional stuff _______________________________ -->
-
 	<section if="MODCHARTING_FEATURES">
 		<haxedef name="FM_ENGINE" value="CODENAME"/>
 		<haxedef name="FM_ENGINE_VERSION" value="1.0"/>
-
 		<haxelib name="funkin-modchart" />
 		<haxeflag name="--macro" value="modchart.backend.macros.Macro.includeFiles()"/>
 	</section>
@@ -262,13 +199,9 @@
 
 	<haxeflag name="--macro" value="funkin.backend.system.macros.Macros.initMacros()" />
 
-	<!-- Fix compiling issues -->
 	<setenv name="HAXEPATH" value="./"/>
 
-	<!-- Haxe 4.3.0+: Enable pretty syntax errors and stuff. -->
 	<haxedef name="message.reporting" value="pretty"/>
-
-	<!-- for logging -->
 	<haxedef name="hscriptPos"/>
 
 	<section if="COMPILE_ALL_CLASSES">
@@ -278,7 +211,7 @@
 
 	<haxeflag name="--macro" value="funkin.backend.system.macros.BuildInfo.printBuildInfo()"/>
 
-	<!-- EXPERMENTAL FEATURES -->
+	<!-- EXPERIMENTAL FEATURES -->
 	<haxedef name="EXPERIMENTAL_FLXGRAPHIC_DESTROY_FIX" />
 	<haxedef name="openfl_dpi_aware"/>
 	<haxedef name="openfl_pool_events"/>
@@ -288,21 +221,10 @@
 
 	<haxedef name="HXCPP_M32" if="32bit"/>
 	<haxedef name="HXCPP_DEBUG_LINK" if="debug"/>
-	<!--C++20 seems doesn't seem to do anything but causes compile warnings-->
-	<!--<haxedef name="HXCPP_CPP20"/>-->
-	<!--<haxedef name="HXCPP_CLANG"/>-->
-	<!--<haxedef name="HXCPP_MSVC"/>-->
-	<!-- This seems to causes more harm, but to be fair, its mostly because of text rendering -->
-	<!-- This is really important to fix honestly, try to get cairo text rendering not memory leak in the future -->
-	<!--<haxedef name="HXCPP_GC_BIG_BLOCKS"/>-->
-	<!--<haxedef name="HXCPP_GC_GENERATIONAL"/>-->
-	<!--<haxedef name="HXCPP_GC_DYNAMIC_SIZE"/>-->
 	<haxedef name="HXCPP_CHECK_POINTER"/>
 	<haxedef name="HXCPP_STACK_LINE"/>
 	<haxedef name="HXCPP_STACK_TRACE"/>
-	<!--<haxedef name="HXCPP_CATCH_SEGV"/>-->
 	<haxedef name="HXCPP_FAST_LINK" unless="debug"/>
-	<!--<haxedef name="HXCPP_ALIGN_ALLOC"/>--> <!--hxcpp.h(71): warning C4005: 'HXCPP_ALIGN_ALLOC': macro redefinition-->
 
 	<haxedef name="analyzer-optimize" unless="debug"/>
 </project>

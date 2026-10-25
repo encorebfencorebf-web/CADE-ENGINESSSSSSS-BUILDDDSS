@@ -1,0 +1,1010 @@
+import funkin.options.OptionsMenu;
+import funkin.menus.ModSwitchMenu;
+import funkin.editors.EditorPicker;
+import funkin.backend.MusicBeatState;
+
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+import flixel.util.FlxColor;
+import flixel.math.FlxMath;
+import flixel.FlxSprite;
+import flixel.FlxG;
+import flixel.util.FlxTimer;
+
+import hxvlc.flixel.FlxVideoSprite;
+
+var hint:FunkinText;
+var elementosvalor:Int = 0;
+var elementoselecionado:Bool = false;
+
+var elementos:Array<FlxSprite> = [];
+var particulas:Array<FlxSprite> = [];
+
+var optionShit:Array<String> = [
+    "1",
+    "2",
+    "3"
+];
+
+var cutscene:FlxVideoSprite;
+
+var bfexeoptIcon:FlxSprite;
+var bfexeoptSprite:FlxSprite;
+var bfexeoptTitle:FunkinText;
+var bfexeoptBy:FunkinText;
+var bfexeoptName:FunkinText;
+
+var bfexeoptTimer:Float = 0;
+var bfexeoptFinished:Bool = false;
+
+var protectedName:String = "BFEXEOPT";
+var protectedLength:Int = 8;
+var originalChecksum:Int = 0;
+
+function calculateChecksum(text:String):Int
+{
+    var result:Int = 17;
+
+    for (i in 0...text.length)
+    {
+        result =
+            (
+                (result * 31)
+                + text.charCodeAt(i)
+                + (i * 7)
+            ) % 100000;
+    }
+
+    return result;
+}
+
+function verifyBFEXEOPT():Bool
+{
+    if (protectedName.length != protectedLength)
+        return false;
+
+    if (protectedName != "BFEXEOPT")
+        return false;
+
+    if (calculateChecksum(protectedName) != originalChecksum)
+        return false;
+
+    return true;
+}
+
+function showBFEXEOPTWarning()
+{
+    var warning:FunkinText = new FunkinText(
+        0,
+        0,
+        FlxG.width,
+        "WARNING\nBFEXEOPT TEXT HAS BEEN MODIFIED!",
+        28
+    );
+
+    warning.font = Paths.font("vcr.ttf");
+    warning.color = FlxColor.RED;
+    warning.alignment = "center";
+    warning.screenCenter();
+
+    add(warning);
+
+    FlxTween.tween(
+        warning,
+        {alpha: 0},
+        2.5,
+        {
+            startDelay: 2,
+            ease: FlxEase.quadOut,
+
+            onComplete: function(_)
+            {
+                remove(warning);
+                warning.destroy();
+            }
+        }
+    );
+}
+
+function create()
+{
+    FlxG.sound.play(Paths.sound("BFexeopt"));
+
+    originalChecksum = calculateChecksum("BFEXEOPT");
+
+    var protectionOK:Bool = verifyBFEXEOPT();
+
+    var introBG:FlxSprite = new FlxSprite(
+        0,
+        0
+    );
+
+    introBG.makeGraphic(
+        FlxG.width,
+        FlxG.height,
+        FlxColor.BLACK
+    );
+
+    introBG.scrollFactor.set(
+        0,
+        0
+    );
+
+    add(introBG);
+
+    bfexeoptTitle = new FunkinText(
+        0,
+        0,
+        FlxG.width,
+        "PORT OPTIMIZED",
+        32
+    );
+
+    bfexeoptTitle.font =
+        Paths.font("vcr.ttf");
+
+    bfexeoptTitle.color =
+        FlxColor.WHITE;
+
+    bfexeoptTitle.alignment =
+        "center";
+
+    bfexeoptTitle.screenCenter();
+
+    bfexeoptTitle.y -= 55;
+
+    add(bfexeoptTitle);
+
+    bfexeoptBy = new FunkinText(
+        0,
+        0,
+        FlxG.width,
+        "BY",
+        22
+    );
+
+    bfexeoptBy.font =
+        Paths.font("vcr.ttf");
+
+    bfexeoptBy.color =
+        FlxColor.WHITE;
+
+    bfexeoptBy.alignment =
+        "center";
+
+    bfexeoptBy.screenCenter();
+
+    bfexeoptBy.y -= 5;
+
+    add(bfexeoptBy);
+
+    bfexeoptName = new FunkinText(
+        0,
+        0,
+        FlxG.width,
+        protectedName,
+        48
+    );
+
+    bfexeoptName.font =
+        Paths.font("vcr.ttf");
+
+    bfexeoptName.color =
+        FlxColor.WHITE;
+
+    bfexeoptName.alignment =
+        "center";
+
+    bfexeoptName.screenCenter();
+
+    bfexeoptName.y += 45;
+
+    add(bfexeoptName);
+
+    bfexeoptIcon = new FlxSprite();
+
+    bfexeoptIcon.loadGraphic(
+        Paths.image("Bfexe")
+    );
+
+    bfexeoptIcon.antialiasing = true;
+
+    bfexeoptIcon.scale.set(
+        0.35,
+        0.35
+    );
+
+    bfexeoptIcon.updateHitbox();
+
+    bfexeoptIcon.screenCenter();
+
+    bfexeoptIcon.y += 105;
+
+    add(bfexeoptIcon);
+
+    bfexeoptSprite = new FlxSprite();
+
+    bfexeoptSprite.frames =
+        Paths.getSparrowAtlas(
+            "Bfexeopt"
+        );
+
+    var bfexeoptFrames:Array<String> = [
+        "5432390000",
+        "5432400000",
+        "5432410000",
+        "5432420000",
+        "5432430000",
+        "5432440000",
+        "5432450000",
+        "5432460000",
+        "5432470000",
+        "5432480000",
+        "5432490000",
+        "5432500000",
+        "5432510000",
+        "5432520000",
+        "5432530000",
+        "5432540000",
+        "5432550000",
+        "5432560000",
+        "5432570000",
+        "5432580000",
+        "5432590000",
+        "5432600000",
+        "5432610000",
+        "5432620000",
+        "5432630000",
+        "5432640000",
+        "5432650000",
+        "5432660000",
+        "5432670000",
+        "5432680000",
+        "5432690000",
+        "5432700000",
+        "5432710000",
+        "5432720000",
+        "5432730000",
+        "5432740000",
+        "5432750000",
+        "5432760000",
+        "5432770000",
+        "5432780000",
+        "5432790000",
+        "5432800000",
+        "5432810000",
+        "5432820000",
+        "5432830000",
+        "5432840000",
+        "5432850000",
+        "5432860000",
+        "5432870000",
+        "5432880000",
+        "5432890000",
+        "5432900000",
+        "5432910000",
+        "5432920000",
+        "5432930000",
+        "5432940000",
+        "5432950000",
+        "5432960000",
+        "5432970000",
+        "5432980000",
+        "5432990000",
+        "5433000000",
+        "5433010000",
+        "5433020000",
+        "5433030000",
+        "5433040000",
+        "5433050000",
+        "5433060000",
+        "5433070000",
+        "5433080000",
+        "5433090000",
+        "5433100000",
+        "5433110000",
+        "5433120000"
+    ];
+
+    bfexeoptSprite.animation.addByNames(
+        "idle",
+        bfexeoptFrames,
+        21,
+        true
+    );
+
+    bfexeoptSprite.animation.play(
+        "idle"
+    );
+
+    bfexeoptSprite.antialiasing = true;
+
+    bfexeoptSprite.scale.set(
+        1,
+        1
+    );
+
+    bfexeoptSprite.updateHitbox();
+
+    bfexeoptSprite.x =
+        (FlxG.width / 2) - 190;
+
+    bfexeoptSprite.y =
+        bfexeoptName.y - 35;
+
+    add(bfexeoptSprite);
+
+    if (!protectionOK)
+    {
+        showBFEXEOPTWarning();
+    }
+
+    bg = new FunkinSprite(
+        0,
+        0
+    );
+
+    bg.loadGraphic(
+        Paths.image(
+            "menus/backgrounds/parque"
+        )
+    );
+
+    bg.alpha = 1;
+
+    bg.scale.set(
+        1.44,
+        1.64
+    );
+
+    bg.screenCenter();
+
+    bg.visible = false;
+
+    add(bg);
+
+    shadowthehedgehog =
+        new FunkinSprite(
+            800,
+            0
+        );
+
+    shadowthehedgehog.loadGraphic(
+        Paths.image(
+            "menus/portraitshots/layout"
+        )
+    );
+
+    shadowthehedgehog.alpha =
+        0.95;
+
+    shadowthehedgehog.scale.set(
+        5,
+        1.5
+    );
+
+    shadowthehedgehog.visible =
+        false;
+
+    add(
+        shadowthehedgehog
+    );
+
+    cutscene =
+        new FlxVideoSprite();
+
+    if (
+        cutscene.load(
+            Paths.video(
+                "cutscene",
+                "mp4"
+            )
+        )
+    )
+    {
+        cutscene.visible =
+            false;
+
+        cutscene.alpha =
+            0;
+
+        trace(
+            "Cutscene loaded."
+        );
+    }
+    else
+    {
+        trace(
+            "Cutscene failed to load."
+        );
+    }
+
+    for (i in 0...50)
+    {
+        var p:FlxSprite =
+            new FlxSprite(
+                FlxG.random.float(
+                    0,
+                    FlxG.width
+                ),
+                FlxG.random.float(
+                    0,
+                    FlxG.height
+                )
+            );
+
+        p.makeGraphic(
+            4,
+            4
+        );
+
+        p.alpha =
+            FlxG.random.float(
+                0.1,
+                0.4
+            );
+
+        p.scale.set(
+            FlxG.random.float(
+                0.5,
+                1.5
+            ),
+            FlxG.random.float(
+                0.5,
+                1.5
+            )
+        );
+
+        p.velocity.set(
+            FlxG.random.float(
+                -20,
+                20
+            ),
+            FlxG.random.float(
+                -20,
+                20
+            )
+        );
+
+        p.visible =
+            false;
+
+        particulas.push(
+            p
+        );
+
+        add(p);
+    }
+
+    var menuX:Float = 100;
+    var menuY:Float = 100;
+    var menuSpacing:Float = 200;
+
+    var mapa:Map<String, String> =
+    [
+        "1" => "play",
+        "2" => "credito",
+        "3" => "config"
+    ];
+
+    for (i in 0...optionShit.length)
+    {
+        var option:String =
+            optionShit[i];
+
+        var elementosmenu =
+            new FlxSprite();
+
+        elementosmenu.frames =
+            Paths.getSparrowAtlas(
+                "menus/portraitshots/menuitems"
+            );
+
+        var animName:String =
+            mapa[option];
+
+        elementosmenu.animation.addByPrefix(
+            "idle",
+            animName,
+            20
+        );
+
+        elementosmenu.animation.addByPrefix(
+            "selected",
+            animName,
+            20
+        );
+
+        elementosmenu.animation.play(
+            "idle"
+        );
+
+        elementosmenu.ID =
+            i;
+
+        elementosmenu.scrollFactor.set(
+            0,
+            0
+        );
+
+        elementosmenu.scale.set(
+            0.8,
+            0.8
+        );
+
+        elementosmenu.updateHitbox();
+
+        elementosmenu.setPosition(
+            menuX,
+            menuY + (
+                i * menuSpacing
+            )
+        );
+
+        elementosmenu.visible =
+            false;
+
+        elementos.push(
+            elementosmenu
+        );
+
+        add(
+            elementosmenu
+        );
+    }
+
+    hint = new FunkinText(
+        0,
+        FlxG.height - 60,
+        FlxG.width,
+        "[up/down] nav - [enter/space/click] play",
+        20
+    );
+
+    hint.font =
+        Paths.font("vcr.ttf");
+
+    hint.color =
+        0xFF666666;
+
+    hint.alignment =
+        "center";
+
+    hint.visible = true;
+
+    add(hint);
+
+    trace(
+        "PARQUE LOADED: "
+        + bg.width
+        + "x"
+        + bg.height
+    );
+}
+
+function update(elapsed:Float)
+{
+    if (!bfexeoptFinished)
+    {
+        bfexeoptTimer +=
+            elapsed;
+
+        bfexeoptName.y =
+            (FlxG.height / 2)
+            + 45
+            + Math.sin(
+                bfexeoptTimer * 2
+            ) * 5;
+
+        if (bfexeoptSprite != null)
+        {
+            bfexeoptSprite.x =
+                (FlxG.width / 2) - 190;
+
+            bfexeoptSprite.y =
+                bfexeoptName.y - 35;
+        }
+
+        if (bfexeoptIcon != null)
+        {
+            bfexeoptIcon.y =
+                (FlxG.height / 2)
+                + 105
+                + Math.sin(
+                    bfexeoptTimer * 2
+                ) * 5;
+
+            bfexeoptIcon.angle +=
+                290 * elapsed;
+        }
+
+        if (
+            bfexeoptTimer >= 3.5
+        )
+        {
+            bfexeoptFinished =
+                true;
+
+            FlxTween.tween(
+                bfexeoptTitle,
+                {alpha: 0},
+                0.4
+            );
+
+            FlxTween.tween(
+                bfexeoptBy,
+                {alpha: 0},
+                0.4
+            );
+
+            FlxTween.tween(
+                bfexeoptIcon,
+                {alpha: 0},
+                0.4
+            );
+
+            FlxTween.tween(
+                bfexeoptSprite,
+                {alpha: 0},
+                0.4
+            );
+
+            FlxTween.tween(
+                bfexeoptName,
+                {alpha: 0},
+                0.4,
+                {
+                    onComplete:
+                    function(_)
+                    {
+                        remove(
+                            bfexeoptTitle
+                        );
+
+                        remove(
+                            bfexeoptBy
+                        );
+
+                        remove(
+                            bfexeoptIcon
+                        );
+
+                        bfexeoptIcon.destroy();
+                        bfexeoptIcon = null;
+
+                        remove(
+                            bfexeoptSprite
+                        );
+
+                        bfexeoptSprite.destroy();
+                        bfexeoptSprite = null;
+
+                        remove(
+                            bfexeoptName
+                        );
+
+                        bfexeoptTitle.destroy();
+                        bfexeoptBy.destroy();
+                        bfexeoptName.destroy();
+
+                        bfexeoptTitle = null;
+                        bfexeoptBy = null;
+                        bfexeoptName = null;
+
+                        bg.visible =
+                            true;
+
+                        shadowthehedgehog.visible =
+                            true;
+
+                        for (p in particulas)
+                        {
+                            if (p != null)
+                                p.visible =
+                                    true;
+                        }
+
+                        for (spr in elementos)
+                        {
+                            if (spr != null)
+                                spr.visible =
+                                    true;
+                        }
+
+                        hint.visible =
+                            true;
+
+                        mudandomodo(
+                            0,
+                            true
+                        );
+                    }
+                }
+            );
+        }
+
+        return;
+    }
+
+    if (!elementoselecionado)
+    {
+        for (p in particulas)
+        {
+            if (p == null)
+                continue;
+
+            p.x +=
+                p.velocity.x
+                * elapsed;
+
+            p.y +=
+                p.velocity.y
+                * elapsed;
+
+            if (p.x > FlxG.width)
+                p.x = 0;
+
+            if (p.x < 0)
+                p.x =
+                    FlxG.width;
+
+            if (p.y > FlxG.height)
+                p.y = 0;
+
+            if (p.y < 0)
+                p.y =
+                    FlxG.height;
+        }
+
+        if (
+            controls.UP_P ||
+            FlxG.keys.justPressed.UP
+        )
+        {
+            mudandomodo(-1);
+        }
+
+        if (
+            controls.DOWN_P ||
+            FlxG.keys.justPressed.DOWN
+        )
+        {
+            mudandomodo(1);
+        }
+
+        if (
+            controls.ACCEPT ||
+            FlxG.keys.justPressed.ENTER ||
+            FlxG.keys.justPressed.SPACE
+        )
+        {
+            selecionandomodo();
+        }
+
+        if (
+            FlxG.keys.justPressed.SEVEN
+        )
+        {
+            persistentUpdate =
+                false;
+
+            persistentDraw =
+                true;
+
+            openSubState(
+                new EditorPicker()
+            );
+        }
+
+        if (
+            controls.SWITCHMOD
+        )
+        {
+            persistentUpdate =
+                false;
+
+            persistentDraw =
+                true;
+
+            openSubState(
+                new ModSwitchMenu()
+            );
+        }
+    }
+
+    if (
+        FlxG.keys.justPressed.NINE ||
+        FlxG.keys.justPressed.NUMPADNINE
+    )
+    {
+        trailer();
+
+        return;
+    }
+
+    for (spr in elementos)
+    {
+        if (spr == null)
+            continue;
+
+        if (
+            FlxG.mouse.overlaps(
+                spr
+            )
+        )
+        {
+            if (
+                spr.ID !=
+                elementosvalor
+            )
+            {
+                elementosvalor =
+                    spr.ID;
+
+                mudandomodo(
+                    0,
+                    true
+                );
+            }
+
+            if (
+                FlxG.mouse.justPressed &&
+                !elementoselecionado
+            )
+            {
+                selecionandomodo();
+            }
+
+            break;
+        }
+    }
+
+    if (controls.BACK)
+    {
+        window.close();
+    }
+}
+
+function trailer()
+{
+    FlxG.camera.fade(
+        FlxColor.BLACK,
+        1,
+        false,
+        function()
+        {
+            FlxG.switchState(
+                new ModState(
+                    "trailer"
+                )
+            );
+        },
+        true
+    );
+}
+
+function mudandomodo(
+    huh:Int = 0,
+    isStarting:Bool = false
+)
+{
+    if (!isStarting)
+    {
+        FlxG.sound.play(
+            Paths.sound(
+                "scrollMenu"
+            )
+        );
+    }
+
+    elementosvalor =
+        FlxMath.wrap(
+            elementosvalor + huh,
+            0,
+            optionShit.length - 1
+        );
+
+    FlxG.save.data.menuSelection =
+        elementosvalor;
+
+    FlxG.save.flush();
+
+    for (spr in elementos)
+    {
+        if (spr == null)
+            continue;
+
+        spr.animation.play(
+            "idle"
+        );
+
+        spr.scale.set(
+            0.8,
+            0.8
+        );
+
+        spr.alpha =
+            1;
+
+        spr.color =
+            FlxColor.GRAY;
+
+        if (
+            spr.ID ==
+            elementosvalor
+        )
+        {
+            spr.animation.play(
+                "selected"
+            );
+
+            spr.color =
+                FlxColor.WHITE;
+        }
+    }
+}
+
+function selecionandomodo()
+{
+    if (elementoselecionado)
+        return;
+
+    elementoselecionado =
+        true;
+
+    FlxG.sound.play(
+        Paths.sound(
+            "confirmMenu"
+        )
+    );
+
+    if (
+        optionShit[elementosvalor]
+        == "1"
+    )
+    {
+        MusicBeatState.skipTransOut =
+            true;
+
+        FlxG.switchState(
+            new FreeplayState()
+        );
+
+        return;
+    }
+
+    FlxTween.tween(
+        FlxG.camera,
+        {zoom: 2},
+        2,
+        {
+            ease:
+                FlxEase.expoInOut,
+
+            onComplete:
+            function(_)
+            {
+                switch (
+                    optionShit[
+                        elementosvalor
+                    ]
+                )
+                {
+                    case "2":
+
+                        FlxG.switchState(
+                            new ModState(
+                                "creditos"
+                            )
+                        );
+
+                    case "3":
+
+                        FlxG.switchState(
+                            new OptionsMenu()
+                        );
+                }
+            }
+        }
+    );
+}

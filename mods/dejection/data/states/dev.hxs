@@ -1,0 +1,283 @@
+// bombas do codename //
+import funkin.backend.MusicBeatState; import funkin.menus.ui.Alphabet; import flixel.util.FlxAxes;
+import funkin.mobile.controls.FlxDPadMode;
+import funkin.mobile.controls.FlxActionMode;
+MusicBeatState.skipTransIn = true;
+
+// sistema base do modo das charts //
+var charts:Array<Array<String>> = [["standard\nchart", "dejection", "standard"], ["multiple notes\nchart", "dejection", "multiple"],["mania\nchart", "dejection", "mania"]];
+var hints:Array<String> = ["Standard Chart features a neutral chart such as trap notes  withvary sustained notes grouped together or decent number of notes overall\n(You can think of it as the Normal difficulty).",
+"The Multiple Notes Chart features a chart with non-sustained notes grouped together\n(You can think of it as the Hard difficulty).",
+"Mania Chart features a chart exclusively for the instrumental\n(You will still need to dodge some traps and deal with various mechanics and not die)."];
+var oquetiver:Array<FunkinText> = []; var selectedIndex:Int = 0; var canSelect:Bool = true; var titleAlphabet:Alphabet; var texto2, hint:FunkinText;
+
+// sistema de easter eggs do dvd screensaver que me deixou louco //
+var hi:FlxSprite; var hiSpeedX:Float = 270; var hiSpeedY:Float = 230;
+var cores:Array<Int> = [0xFFFF0000, 0xFF00FF00, 0xFF0000FF, 0xFFFFFF00, 0xFFFF00FF, 0xFF00FFFF, 0xFF8000FF, 0xFFFF8000, 0xFFFFFFFF];
+var cor:Int = 8; var bateunaporradocanto:Bool = false;
+
+function create() {
+	CoolUtil.playMusic(Paths.music("dougabgm")); 
+	FlxG.camera.shake(0.001, 0.1);
+	new FlxTimer().start(0.1, function(tmr:FlxTimer) {FlxG.camera.shake(0.001, 0.1);}, 0);
+
+    bg = new FunkinSprite(0, 0).loadGraphic(Paths.image('menus/backgrounds/parque'));
+    shadowthehedgehog = new FunkinSprite(800, 0).loadGraphic(Paths.image('menus/portraitshots/layout'));
+    bg.alpha = 0.05; shadowthehedgehog.alpha = 0.55;
+    bg.scale.set(1.44, 1.64); shadowthehedgehog.scale.set(5, 1.5);
+    bg.screenCenter(); add(bg); add(shadowthehedgehog);
+
+    hi = new FlxSprite(0, 0); hi.frames = Paths.getSparrowAtlas("menus/hello");
+    hi.animation.addByPrefix("HI", "hi", 30, true); hi.animation.play("HI");
+    hi.x = FlxG.random.float(50, FlxG.width - hi.width - 50); hi.y = FlxG.random.float(50, FlxG.height - hi.height - 50);
+    cor = 8; hi.color = cores[cor]; hi.scale.set(0.6, 0.5); hi.updateHitbox();
+    bateunaporradocanto = false; add(hi);
+
+    titleAlphabet = new Alphabet(0, 50, "select diff difficulty modes", "bold");
+    titleAlphabet.setGraphicSize(32); titleAlphabet.updateHitbox();
+    titleAlphabet.screenCenter(FlxAxes.X); add(titleAlphabet);
+
+	texto2 = new FunkinText(0, 100, FlxG.width, "dejection by pastelkk (feat. jogadorice)", 24);
+	texto2.font = Paths.font("vcr.ttf"); texto2.color = 0xFFAAAAAA;
+    texto2.alignment = "center"; add(texto2);
+
+    var tempTexts:Array<FunkinText> = []; var totalWidth:Float = 0;
+    
+    for (i in 0...charts.length) {
+        var temp = new FunkinText(0, 0, 0, charts[i][0], 32);
+        temp.font = Paths.font("vcr.ttf");
+        tempTexts.push(temp); totalWidth += temp.width + 60;
+    }
+    totalWidth -= 60;
+
+    var startX:Float = (FlxG.width - totalWidth) / 2;
+    var posY:Float = 400;
+
+    for (i in 0...charts.length) {
+        var texto = new FunkinText(0, posY, 0, charts[i][0], 32);
+        texto.font = Paths.font("vcr.ttf");
+        texto.color = (i == selectedIndex) ? 0xFFFFFF00 : 0xFFFFFFFF;
+        texto.alignment = "center";
+        texto.ID = i;
+    
+        if (i == 0)
+            texto.x = startX;
+        else
+            texto.x = oquetiver[i-1].x + oquetiver[i-1].width + 60;
+
+        add(texto);
+        oquetiver.push(texto);
+    }
+
+    hint = new FunkinText(
+        0,
+        FlxG.height - 90,
+        FlxG.width,
+        "[left/right] nav - [enter/space] play - [esc] back\n" + hints[selectedIndex],
+        20
+    );
+    hint.font = Paths.font("vcr.ttf");
+    hint.color = 0xFF666666;
+    hint.alignment = "center";
+    add(hint);
+
+    updateSelection();
+
+    addVPad(
+        FlxDPadMode.NONE,
+        FlxActionMode.A_B
+    );
+    addVPadCamera();
+}
+
+function update(elapsed:Float) {
+    if (!canSelect) return;
+
+    // o basico da movimentação do hi nas telas //
+    if (hi != null && !bateunaporradocanto) {
+        hi.x += hiSpeedX * elapsed;
+        hi.y += hiSpeedY * elapsed;
+
+        var bateu = false;
+        var bateunaporradocanto2 = false;
+
+        if (hi.x <= 0) {
+            hi.x = 0;
+            hiSpeedX = Math.abs(hiSpeedX);
+            bateu = true;
+        }
+        else if (hi.x + hi.width >= FlxG.width) {
+            hi.x = FlxG.width - hi.width;
+            hiSpeedX = -Math.abs(hiSpeedX);
+            bateu = true;
+        }
+
+        if (hi.y <= 0) {
+            hi.y = 0;
+            hiSpeedY = Math.abs(hiSpeedY);
+            bateu = true;
+        }
+        else if (hi.y + hi.height >= FlxG.height) {
+            hi.y = FlxG.height - hi.height;
+            hiSpeedY = -Math.abs(hiSpeedY);
+            bateu = true;
+        }
+    
+        // o basico quando o hi bater em qualquer lugar na tela //
+        if (bateu) {
+            var margem:Float = 5;
+            var cantoesquerdo = hi.x <= margem;
+            var cantodireito = hi.x + hi.width >= FlxG.width - margem;
+            var cantocima = hi.y <= margem;
+            var cantobaixo = hi.y + hi.height >= FlxG.height - margem;
+
+            if ((cantoesquerdo || cantodireito) && (cantocima || cantobaixo))
+                bateunaporradocanto2 = true;
+        }
+    
+        // easteregg //
+        if (bateunaporradocanto2 && !bateunaporradocanto) {
+            bateunaporradocanto = true;
+            FlxG.sound.play(Paths.sound("scream"));
+
+            FlxTween.tween(hi, {alpha: 0}, 3, {
+                ease: FlxEase.linear,
+                onComplete: function(twn:FlxTween) {
+                    if (hi != null) {
+                        remove(hi);
+                        hi.destroy();
+                        hi = null;
+                    }
+                }
+            });
+
+            hi.color = 0xFFFFFFFF;
+        }
+
+        if (bateu && !bateunaporradocanto2 && !bateunaporradocanto) {
+            var cornova:Int;
+
+            do {
+                cornova = FlxG.random.int(0, cores.length - 2);
+            } while (cornova == cor && cores.length > 2);
+
+            cor = cornova;
+            hi.color = cores[cor];
+        }
+    }
+
+    // pra quando vc rolar pra esquerda //
+    if (controls.LEFT_P || FlxG.keys.justPressed.LEFT) {
+        if (selectedIndex > 0) {
+            selectedIndex--;
+            updateSelection();
+            FlxG.sound.play(Paths.sound("scrollMenu"));
+            FlxG.camera.flash(FlxColor.BLACK, 0.2, null, true);
+        }
+    }
+
+    // pra quando vc rolar pra direita //
+    if (controls.RIGHT_P || FlxG.keys.justPressed.RIGHT) {
+        if (selectedIndex < charts.length - 1) {
+            selectedIndex++;
+            updateSelection();
+            FlxG.sound.play(Paths.sound("scrollMenu"));
+            FlxG.camera.flash(FlxColor.BLACK, 0.2, null, true);
+        }
+    }
+
+    // pra quando escolher um modo de vez //
+    // IMPORTANTE: mouse/touch NÃO é mais usado como Accept.
+    if (controls.ACCEPT || FlxG.keys.justPressed.SPACE) {
+        if (canSelect) {
+            canSelect = false;
+
+            FlxG.sound.play(Paths.sound("confirmMenu"));
+            FlxTween.tween(
+                FlxG.camera,
+                {zoom: 2},
+                2,
+                {ease: FlxEase.expoInOut}
+            );
+
+            new FlxTimer().start(1.5, function(tmr:FlxTimer) {
+                PlayState.loadSong(
+                    charts[selectedIndex][1],
+                    charts[selectedIndex][2]
+                );
+                FlxG.switchState(new PlayState());
+            });
+        }
+    }
+
+    // pra qualquer coisa envolvendo usar o mouse //
+    // Mouse apenas seleciona/segue o chart.
+    // NÃO ativa o chart ao clicar/tocar.
+    var mouseOver = false;
+
+    for (txt in oquetiver) {
+        if (FlxG.mouse.overlaps(txt)) {
+            mouseOver = true;
+
+            if (txt.ID != selectedIndex) {
+                selectedIndex = txt.ID;
+                updateSelection();
+                FlxG.sound.play(Paths.sound("scrollMenu"));
+                FlxG.camera.flash(FlxColor.BLACK, 0.2, null, true);
+            }
+
+            break;
+        }
+    }
+
+    // pra quando sai //
+    if (
+        controls.BACK ||
+        FlxG.keys.justPressed.ESCAPE
+    ) {
+        FlxG.switchState(
+            new ModState("principal")
+        );
+
+        return;
+    }
+}
+
+function updateSelection() {
+    for (i in 0...oquetiver.length) {
+        var txt = oquetiver[i];
+
+        txt.color = (i == selectedIndex)
+            ? 0xFFFFFF00
+            : 0xFFFFFFFF;
+
+        txt.scale.x = (i == selectedIndex)
+            ? 1.15
+            : 1.0;
+
+        txt.scale.y = (i == selectedIndex)
+            ? 1.15
+            : 1.0;
+    }
+
+    if (hint != null)
+        hint.text =
+            "[left/right] nav - [enter/space] play - [esc] back\n"
+            + hints[selectedIndex];
+}
+
+function onMouseOver() {
+    for (i in 0...oquetiver.length) {
+        var txt = oquetiver[i];
+
+        if (FlxG.mouse.overlaps(txt)) {
+            if (selectedIndex != i) {
+                selectedIndex = i;
+                updateSelection();
+                FlxG.sound.play(Paths.sound("scrollMenu"));
+            }
+
+            break;
+        }
+    }
+}

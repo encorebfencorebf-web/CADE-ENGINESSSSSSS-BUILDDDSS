@@ -1,0 +1,13 @@
+// livraria (imports) e basicos do video //
+import hxvlc.flixel.FlxVideoSprite; var trailer:String = Paths.video("trailer"); var video:FlxVideo;
+
+function create() {
+	if (FlxG.sound.music != null) {FlxG.sound.music.destroy(); FlxG.sound.music = null;}
+	video = new FlxVideoSprite(); video.load(trailer); video.bitmap.onEndReached.add(acaba);
+	video.bitmap.onFormatSetup.add(() -> {video.setGraphicSize(FlxG.width, FlxG.height); video.updateHitbox(); video.screenCenter();});
+	video.antialiasing = true; add(video); video.play();
+}
+
+function destroy() {video.stop(); video.destroy();}
+function acaba() {if (FlxG.sound.music != null) {FlxG.sound.music.destroy(); FlxG.sound.music = null;}
+video.stop(); remove(video); FlxG.switchState(new TitleState());}

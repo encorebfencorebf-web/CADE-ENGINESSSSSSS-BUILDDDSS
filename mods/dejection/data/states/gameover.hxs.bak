@@ -1,0 +1,57 @@
+import funkin.backend.MusicBeatState;
+import funkin.mobile.controls.FlxDPadMode;
+import funkin.mobile.controls.FlxActionMode;
+var estatica:FunkinSprite, statsCamera:FlxCamera;
+import funkin.backend.shaders.WiggleEffect; import openfl.filters.ShaderFilter;
+var principal:FunkinSprite; var ondinha:WiggleEffect;
+
+var canPress:Bool = true;
+var endMusicPlaying:Bool = false;
+
+function create() {
+    FlxG.sound.playMusic(Paths.music('gameOver'), 0.2, true); 
+    FlxG.camera.flash(FlxColor.BLACK, 3, null, true); FlxG.camera.shake(0.001, 0.1);
+	new FlxTimer().start(0.1, function(tmr:FlxTimer) {FlxG.camera.shake(0.001, 0.1);}, 0);
+
+    background = new FunkinSprite().loadGraphic(Paths.image('menus/backgrounds/morrido'));
+    background.antialiasing = true; background.scale.set(0.75, 0.75); background.screenCenter(); add(background);
+
+    // hi = new FlxSprite(0, 0); hi.frames = Paths.getSparrowAtlas("menus/hello"); //
+    // hi.animation.addByPrefix("HI", "hi", 30, true); hi.animation.play("HI"); //
+    // hi.x = FlxG.random.float(50, FlxG.width - hi.width - 50); hi.y = FlxG.random.float(50, FlxG.height - hi.height - 50); //
+    // hi.scale.set(0.6, 0.5); hi.updateHitbox(); add(hi); //
+
+    ondinha = new WiggleEffect(); ondinha.waveFrequency = 30; ondinha.waveSpeed = 5; ondinha.waveAmplitude = 0.005;
+    if (background != null) {background.shader = ondinha.shader;}
+
+    retry = new FunkinSprite(-200, -50).loadGraphic(Paths.image('menus/portraitshots/retry'));
+    retry.antialiasing = true; retry.scale.set(0.5, 0.5); add(retry);
+
+    estatica = new FunkinSprite(); estatica.frames = Paths.getSparrowAtlas("game/pantalla");
+	estatica.animation.addByPrefix("idle", "pantalla", 40, true); estatica.animation.play("idle");
+	estatica.screenCenter(); estatica.scrollFactor.set();
+	estatica.scale.set(0.975, 0.83); add(estatica);
+
+    var hint = new FunkinText(0, FlxG.height - 60, FlxG.width, "[enter/space/click] back", 20);
+    hint.font = Paths.font("vcr.ttf"); hint.color = 0xFF666666; hint.alignment = "center"; add(hint);
+    addVPad(
+        FlxDPadMode.NONE,
+        FlxActionMode.A
+    );
+
+    addVPadCamera();
+}
+
+function update(elapsed:Float) {
+    if (ondinha != null) {ondinha.shader.uTime.value = [Conductor.songPosition / 1000];}
+
+    if (controls.ACCEPT || FlxG.keys.justPressed.ENTER ) {
+        if (canPress && !endMusicPlaying) {canPress = false; endMusicPlaying = true;
+            if (FlxG.sound.music != null) {FlxG.sound.music.stop();}
+            FlxG.sound.play(Paths.sound('gameOverEnd'), 0.5);
+            FlxG.camera.fade(FlxColor.BLACK, 3, false, function() {MusicBeatState.skipTransOut = true; 
+        FlxG.switchState(
+            new ModState("principal")
+        }
+    }
+}

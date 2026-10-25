@@ -1,0 +1,17 @@
+{
+	"customValues": {},
+	"color": "#000000",
+	"opponentModeAllowed": false,
+	"icon": "face",
+	"difficulties": [
+		"standard",
+		"multiple",
+		"mania"
+	],
+	"coopAllowed": false,
+	"stepsPerBeat": 4,
+	"displayName": "dejection",
+	"needsVoices": true,
+	"beatsPerMeasure": 4,
+	"bpm": 140
+}

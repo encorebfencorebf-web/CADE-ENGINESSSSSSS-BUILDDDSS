@@ -1,0 +1,231 @@
+/* this is a (kinda) port of the script by SenTCM, credits to him, made by silly borja please credit if used */
+
+// ============================================================
+// SETTINGS
+// ============================================================
+
+public var tilt_offset:Float = 10.0;
+public var tilt_angleIntensity:Float = 0.05;
+public var tilt_followMult:Float = 20.0;
+public var tilt_isHUDlerped:Bool = true;
+
+
+// ============================================================
+// MANIA CHECK
+// ============================================================
+
+function mania():Bool
+{
+    return PlayState.instance != null
+        && PlayState.instance.difficulty == "mania";
+}
+
+
+// ============================================================
+// UPDATE
+// ============================================================
+
+function update(elapsed:Float)
+{
+    if (camGame == null)
+        return;
+
+    // --------------------------------------------------------
+    // MANIA
+    // --------------------------------------------------------
+
+    if (mania())
+    {
+        var lerpAmount:Float =
+            camGame.followLerp * tilt_followMult;
+
+        camGame.targetOffset.x =
+            FlxMath.lerp(
+                camGame.targetOffset.x,
+                0,
+                lerpAmount
+            );
+
+        camGame.targetOffset.y =
+            FlxMath.lerp(
+                camGame.targetOffset.y,
+                0,
+                lerpAmount
+            );
+
+        camGame.angle =
+            FlxMath.lerp(
+                camGame.angle,
+                0,
+                lerpAmount / 2
+            );
+
+        if (tilt_isHUDlerped && camHUD != null)
+        {
+            camHUD.angle =
+                FlxMath.lerp(
+                    camHUD.angle,
+                    0,
+                    lerpAmount / 2
+                );
+        }
+
+        return;
+    }
+
+
+    // --------------------------------------------------------
+    // SAFETY CHECK
+    // --------------------------------------------------------
+
+    if (strumLines == null)
+    {
+        doCameraStuffEhehehe([0, 0]);
+        return;
+    }
+
+    if (strumLines.members == null)
+    {
+        doCameraStuffEhehehe([0, 0]);
+        return;
+    }
+
+    if (curCameraTarget < 0 ||
+        curCameraTarget >= strumLines.members.length)
+    {
+        doCameraStuffEhehehe([0, 0]);
+        return;
+    }
+
+
+    var currentStrumLine =
+        strumLines.members[curCameraTarget];
+
+    if (currentStrumLine == null)
+    {
+        doCameraStuffEhehehe([0, 0]);
+        return;
+    }
+
+
+    if (currentStrumLine.characters == null ||
+        currentStrumLine.characters.length <= 0)
+    {
+        doCameraStuffEhehehe([0, 0]);
+        return;
+    }
+
+
+    var currentCharacter =
+        currentStrumLine.characters[0];
+
+    if (currentCharacter == null)
+    {
+        doCameraStuffEhehehe([0, 0]);
+        return;
+    }
+
+
+    // --------------------------------------------------------
+    // ANIMATION CHECK
+    // --------------------------------------------------------
+
+    if (currentCharacter.animation == null)
+    {
+        doCameraStuffEhehehe([0, 0]);
+        return;
+    }
+
+    if (currentCharacter.animation.curAnim == null)
+    {
+        doCameraStuffEhehehe([0, 0]);
+        return;
+    }
+
+
+    var animName:String =
+        currentCharacter.animation.curAnim.name;
+
+
+    // --------------------------------------------------------
+    // TILT
+    // --------------------------------------------------------
+
+    switch (animName)
+    {
+        case "singLEFT", "singLEFT-alt":
+            doCameraStuffEhehehe([-tilt_offset, 0]);
+
+        case "singDOWN", "singDOWN-alt":
+            doCameraStuffEhehehe([0, tilt_offset]);
+
+        case "singUP", "singUP-alt":
+            doCameraStuffEhehehe([0, -tilt_offset]);
+
+        case "singRIGHT", "singRIGHT-alt":
+            doCameraStuffEhehehe([tilt_offset, 0]);
+
+        default:
+            doCameraStuffEhehehe([0, 0]);
+    }
+}
+
+
+// ============================================================
+// CAMERA EFFECT
+// ============================================================
+
+function doCameraStuffEhehehe(offsets:Array<Float>)
+{
+    if (camGame == null)
+        return;
+
+    var lerpAmount:Float =
+        camGame.followLerp * tilt_followMult;
+
+
+    // --------------------------------------------------------
+    // CAMERA OFFSET
+    // --------------------------------------------------------
+
+    camGame.targetOffset.x =
+        FlxMath.lerp(
+            camGame.targetOffset.x,
+            offsets[0],
+            lerpAmount
+        );
+
+    camGame.targetOffset.y =
+        FlxMath.lerp(
+            camGame.targetOffset.y,
+            offsets[1],
+            lerpAmount
+        );
+
+
+    // --------------------------------------------------------
+    // CAMERA ANGLE
+    // --------------------------------------------------------
+
+    camGame.angle =
+        FlxMath.lerp(
+            camGame.angle,
+            offsets[0] * tilt_angleIntensity,
+            lerpAmount / 2
+        );
+
+
+    // --------------------------------------------------------
+    // HUD ANGLE
+    // --------------------------------------------------------
+
+    if (tilt_isHUDlerped && camHUD != null)
+    {
+        camHUD.angle =
+            FlxMath.lerp(
+                camHUD.angle,
+                offsets[0] * tilt_angleIntensity,
+                lerpAmount / 2
+            );
+    }
+}

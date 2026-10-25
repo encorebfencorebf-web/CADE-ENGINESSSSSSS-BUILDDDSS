@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="mickey_mouse (3).png">
+	<!-- Created with Adobe Animate version 21.0.6.41649 -->
+	<!-- http://www.adobe.com/products/animate.html -->
+	<SubTexture name="idle0000" x="992" y="0" width="271" height="416" frameX="-48" frameY="-46" frameWidth="480" frameHeight="480"/>
+	<SubTexture name="idle0001" x="269" y="824" width="264" height="409" frameX="-54" frameY="-53" frameWidth="480" frameHeight="480"/>
+	<SubTexture name="idle0002" x="0" y="824" width="269" height="416" frameX="-46" frameY="-49" frameWidth="480" frameHeight="480"/>
+	<SubTexture name="down0000" x="533" y="824" width="300" height="336" frameX="-65" frameY="-127" frameWidth="480" frameHeight="480"/>
+	<SubTexture name="down0001" x="833" y="824" width="279" height="336" frameX="-63" frameY="-127" frameWidth="480" frameHeight="480"/>
+	<SubTexture name="up0000" x="0" y="0" width="344" height="441" frameX="-22" frameY="-29" frameWidth="480" frameHeight="480"/>
+	<SubTexture name="up0001" x="344" y="0" width="318" height="439" frameX="-42" frameY="-32" frameWidth="480" frameHeight="480"/>
+	<SubTexture name="left0000" x="662" y="0" width="330" height="382" frameX="-24" frameY="-77" frameWidth="480" frameHeight="480"/>
+	<SubTexture name="left0001" x="0" y="441" width="327" height="383" frameX="-26" frameY="-85" frameWidth="480" frameHeight="480"/>
+	<SubTexture name="right0000" x="327" y="441" width="312" height="378" frameX="-140" frameY="-104" frameWidth="480" frameHeight="480"/>
+	<SubTexture name="right0001" x="639" y="441" width="302" height="378" frameX="-140" frameY="-104" frameWidth="480" frameHeight="480"/>
+</TextureAtlas>

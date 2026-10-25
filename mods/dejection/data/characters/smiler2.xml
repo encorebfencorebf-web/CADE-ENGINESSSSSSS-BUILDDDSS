@@ -1,0 +1,7 @@
+<character x="-50" y="45" sprite="mickey_mouse (2)" scale="1.6" camx="205" camy="50" icon="icon-dad" color="#525951">
+	<anim name="idle" anim="Idle" fps="25" loop="true" />
+	<anim name="singDOWN" anim="Down" x="-6" y="-10" fps="35" />
+	<anim name="singRIGHT" anim="Right" x="5" y="-10" fps="35" />
+	<anim name="singLEFT" anim="Left" x="-5" y="-10" fps="35" />
+	<anim name="singUP" anim="Up" x="5" y="38" fps="35" />
+</character>

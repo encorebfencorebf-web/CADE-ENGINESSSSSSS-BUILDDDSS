@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
+<TextureAtlas imagePath="kevin_normal.png">
+	
+	
+	<SubTexture name="kevin_normal0000" x="0" y="0" width="1120" height="1194" frameX="0" frameY="0" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0001" x="0" y="0" width="1120" height="1194" frameX="0" frameY="0" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0002" x="0" y="0" width="1120" height="1194" frameX="0" frameY="0" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0003" x="1120" y="0" width="1048" height="1117" frameX="-39" frameY="-41" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0004" x="2168" y="0" width="976" height="1040" frameX="-78" frameY="-81" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0005" x="3144" y="0" width="904" height="963" frameX="-117" frameY="-121" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0006" x="0" y="1194" width="831" height="886" frameX="-156" frameY="-161" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0007" x="831" y="1194" width="759" height="809" frameX="-195" frameY="-201" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0008" x="1590" y="1194" width="778" height="732" frameX="-233" frameY="-242" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0009" x="2369" y="1194" width="963" height="882" frameX="-161" frameY="-176" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0010" x="0" y="2081" width="963" height="882" frameX="-161" frameY="-176" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0011" x="963" y="2081" width="788" height="707" frameX="-185" frameY="-312" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0012" x="1751" y="2081" width="893" height="735" frameX="-101" frameY="-295" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0013" x="2644" y="2081" width="858" height="746" frameX="-154" frameY="-239" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0014" x="0" y="2963" width="789" height="616" frameX="-182" frameY="-316" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0015" x="789" y="2963" width="897" height="652" frameX="-166" frameY="-316" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0016" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0017" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0018" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0019" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0020" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0021" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0022" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0023" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0024" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0025" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0026" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0027" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0028" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0029" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0030" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0031" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0032" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0033" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0034" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0035" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0036" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0037" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0038" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+	<SubTexture name="kevin_normal0039" x="1686" y="2963" width="897" height="617" frameX="-166" frameY="-351" frameWidth="1123" frameHeight="1194" />
+</TextureAtlas>

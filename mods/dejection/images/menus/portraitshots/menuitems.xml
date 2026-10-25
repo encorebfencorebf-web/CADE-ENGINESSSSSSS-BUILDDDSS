@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="menuitems.png">
+	<!-- Created with Adobe Animate version 21.0.6.41649 -->
+	<!-- http://www.adobe.com/products/animate.html -->
+	<SubTexture name="play0000" x="0" y="0" width="280" height="176" frameX="-45" frameY="-40" frameWidth="344" frameHeight="238"/>
+	<SubTexture name="play0001" x="0" y="176" width="261" height="167" frameX="-47" frameY="-48" frameWidth="344" frameHeight="238"/>
+	<SubTexture name="play0002" x="280" y="0" width="268" height="163" frameX="-46" frameY="-48" frameWidth="344" frameHeight="238"/>
+	<SubTexture name="play0003" x="0" y="0" width="280" height="176" frameX="-45" frameY="-40" frameWidth="344" frameHeight="238"/>
+	<SubTexture name="play0004" x="0" y="176" width="261" height="167" frameX="-47" frameY="-48" frameWidth="344" frameHeight="238"/>
+	<SubTexture name="play0005" x="280" y="0" width="268" height="163" frameX="-46" frameY="-48" frameWidth="344" frameHeight="238"/>
+	<SubTexture name="credito0000" x="0" y="516" width="120" height="188" frameX="-66" frameY="-30" frameWidth="250" frameHeight="250"/>
+	<SubTexture name="credito0001" x="696" y="185" width="122" height="186" frameX="-65" frameY="-33" frameWidth="250" frameHeight="250"/>
+	<SubTexture name="credito0002" x="696" y="0" width="126" height="185" frameX="-64" frameY="-32" frameWidth="250" frameHeight="250"/>
+	<SubTexture name="credito0003" x="0" y="516" width="120" height="188" frameX="-66" frameY="-30" frameWidth="250" frameHeight="250"/>
+	<SubTexture name="credito0004" x="696" y="185" width="122" height="186" frameX="-65" frameY="-33" frameWidth="250" frameHeight="250"/>
+	<SubTexture name="credito0005" x="696" y="0" width="126" height="185" frameX="-64" frameY="-32" frameWidth="250" frameHeight="250"/>
+	<SubTexture name="config0000" x="0" y="343" width="151" height="173" frameX="-78" frameY="-99" frameWidth="390" frameHeight="344"/>
+	<SubTexture name="config0001" x="548" y="174" width="148" height="174" frameX="-80" frameY="-98" frameWidth="390" frameHeight="344"/>
+	<SubTexture name="config0002" x="548" y="0" width="148" height="174" frameX="-79" frameY="-99" frameWidth="390" frameHeight="344"/>
+	<SubTexture name="config0003" x="0" y="343" width="151" height="173" frameX="-78" frameY="-99" frameWidth="390" frameHeight="344"/>
+	<SubTexture name="config0004" x="548" y="174" width="148" height="174" frameX="-80" frameY="-98" frameWidth="390" frameHeight="344"/>
+	<SubTexture name="config0005" x="548" y="0" width="148" height="174" frameX="-79" frameY="-99" frameWidth="390" frameHeight="344"/>
+</TextureAtlas>

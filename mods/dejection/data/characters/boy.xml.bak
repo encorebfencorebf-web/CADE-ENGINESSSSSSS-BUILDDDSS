@@ -1,0 +1,11 @@
+<character x="17" y="200" sprite="boy_retro" scale="1.4" flipX="true" isPlayer="true" camx="-285" icon="icon-bf-suicide" color="#7D8190">
+	<anim name="idle" anim="Idle" fps="35" />
+	<anim name="singLEFT" anim="Left" x="38" fps="43" />
+	<anim name="singLEFTmiss" anim="missleft" x="38" y="18" fps="35" />
+	<anim name="singDOWN" anim="Down" y="-62" fps="43" />
+	<anim name="singDOWNmiss" anim="missdown" y="-62" fps="35" />
+	<anim name="singUP" anim="Up" y="2" fps="43" />
+	<anim name="singUPmiss" anim="missup" y="8" fps="35" />
+	<anim name="singRIGHT" anim="Right" x="-9" y="-8" fps="43" />
+	<anim name="singRIGHTmiss" anim="missright" x="-9" y="-8" fps="35" />
+</character>

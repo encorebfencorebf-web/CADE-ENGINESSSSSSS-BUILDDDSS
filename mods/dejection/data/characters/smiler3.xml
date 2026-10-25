@@ -1,0 +1,8 @@
+<!DOCTYPE codename-engine-character>
+<character x="350" y="-300" sprite="mickey_mouse (3)" scale="1.5" antialiasing="false" camx="-150" camy="100" icon="icon-dad" color="#525951">
+	<anim name="idle" anim="idle" fps="13" loop="true"/>
+	<anim name="singDOWN" anim="down" fps="13"/>
+	<anim name="singRIGHT" anim="right" fps="13"/>
+	<anim name="singLEFT" anim="left" fps="13"/>
+	<anim name="singUP" anim="up" fps="13"/>
+</character>

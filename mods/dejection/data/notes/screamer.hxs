@@ -1,0 +1,229 @@
+import flixel.tweens.FlxEase;
+import flixel.util.FlxTimer;
+
+// ============================================================
+// SCREAMER — LOW RAM / LOW-END OPTIMIZED
+// ============================================================
+
+var screamer:FunkinSprite = null;
+var hideTimer:FlxTimer = null;
+
+var camera:HudCamera = null;
+var screamerActive:Bool = false;
+
+
+// ============================================================
+// PLAYER HIT
+// ============================================================
+
+function onPlayerHit(e)
+{
+    if (e == null)
+        return;
+
+    if (e.noteType == "screamer")
+    {
+        e.cancel();
+        scream2();
+    }
+}
+
+
+// ============================================================
+// PLAYER MISS
+// ============================================================
+
+function onPlayerMiss(e)
+{
+    if (e == null)
+        return;
+
+    if (e.noteType == "screamer")
+    {
+        e.cancel(true);
+
+        if (e.note != null && e.note.strumLine != null)
+        {
+            e.note.strumLine.deleteNote(e.note);
+        }
+    }
+}
+
+
+// ============================================================
+// NOTE CREATION
+// ============================================================
+
+function onNoteCreation(e)
+{
+    if (e == null)
+        return;
+
+    if (e.noteType == "screamer")
+    {
+        e.noteSprite = "game/notes/screamer";
+    }
+}
+
+
+// ============================================================
+// CREATE
+// ============================================================
+
+function create()
+{
+    // --------------------------------------------------------
+    // Camera tambahan
+    // --------------------------------------------------------
+
+    camera = new FlxCamera(
+        0,
+        0,
+        FlxG.width,
+        FlxG.height
+    );
+
+    camera.bgColor = 0x00000000;
+
+    FlxG.cameras.add(camera, false);
+
+
+    // --------------------------------------------------------
+    // Hanya SATU screamer sprite
+    // --------------------------------------------------------
+
+    screamer = new FunkinSprite();
+
+    screamer.frames =
+        Paths.getSparrowAtlas(
+            "game/mecanicas/SCREAMER"
+        );
+
+    screamer.animation.addByPrefix(
+        "SCREAMER instancia 1",
+        "SCREAMER instancia 1",
+        30,
+        false
+    );
+
+    screamer.cameras = [camera];
+
+    screamer.screenCenter();
+
+    screamer.alpha = 0;
+
+    add(screamer);
+}
+
+
+// ============================================================
+// SCREAMER
+// ============================================================
+
+function scream2()
+{
+    if (screamer == null)
+        return;
+
+    // --------------------------------------------------------
+    // Batalkan timer sebelumnya
+    // --------------------------------------------------------
+
+    if (hideTimer != null)
+    {
+        hideTimer.cancel();
+        hideTimer = null;
+    }
+
+
+    // --------------------------------------------------------
+    // Tampilkan screamer
+    // --------------------------------------------------------
+
+    screamerActive = true;
+
+    screamer.alpha = 1;
+
+    screamer.scale.set(
+        2,
+        2
+    );
+
+    screamer.screenCenter();
+
+
+    // --------------------------------------------------------
+    // Jalankan animasi sekali
+    // --------------------------------------------------------
+
+    screamer.animation.play(
+        "SCREAMER instancia 1",
+        true
+    );
+
+
+    // --------------------------------------------------------
+    // Suara
+    // --------------------------------------------------------
+
+    FlxG.sound.play(
+        Paths.sound("static")
+    );
+
+
+    // --------------------------------------------------------
+    // Hilangkan setelah 0.6 detik
+    // --------------------------------------------------------
+
+    hideTimer = new FlxTimer();
+
+    hideTimer.start(
+        0.6,
+        function(tmr:FlxTimer)
+        {
+            if (screamer == null)
+                return;
+
+            screamer.alpha = 0;
+            screamerActive = false;
+
+            hideTimer = null;
+        }
+    );
+}
+
+
+// ============================================================
+// UPDATE
+// ============================================================
+
+function update(elapsed:Float)
+{
+    // Tidak melakukan apa-apa setiap frame.
+    // Screamer hanya aktif ketika dipanggil.
+}
+
+
+// ============================================================
+// DESTROY
+// ============================================================
+
+function destroy()
+{
+    if (hideTimer != null)
+    {
+        hideTimer.cancel();
+        hideTimer = null;
+    }
+
+    if (screamer != null)
+    {
+        screamer.animation.stop();
+        screamer.destroy();
+        screamer = null;
+    }
+
+    screamerActive = false;
+
+    camera = null;
+}

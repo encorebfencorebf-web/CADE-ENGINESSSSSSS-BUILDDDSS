@@ -1,0 +1,107 @@
+// livraria (imports) e basicos das estatisbfex3optticas //
+import funkin.backend.MusicBeatState; introLength = 0;
+var estatica:FunkinSprite, statsCamera:FlxCamera;
+
+// livraria (imports) e basicos dos efeitos de sustain, inspirado do Vs Mouse Ultimate, ent, obrigado aos envolvidos //
+ import funkin.backend.shaders.WiggleEffect; import openfl.filters.ShaderFilter;
+var sustains:HudCamera; var ondinha:WiggleEffect;
+
+function ismania():Bool {return PlayState.instance != null && PlayState.instance.difficulty == "mania";}
+
+function create() {
+	estatica = new FunkinSprite(); estatica.frames = Paths.getSparrowAtlas("game/pantalla");
+	estatica.animation.addByPrefix("idle", "pantalla", 40, true); estatica.animation.play("idle");
+  // estatica.cameras = [camHUD];
+	estatica.screenCenter(); estatica.scrollFactor.set();
+	estatica.scale.set(2.50, 2.50); add(estatica);
+
+    // hi = new FlxSprite(0, 0); hi.frames = Paths.getSparrowAtlas("menus/hello"); //
+    // hi.animation.addByPrefix("HI", "hi", 30, true); hi.animation.play("HI"); //
+    // hi.x = FlxG.random.float(50, FlxG.width - hi.width - 50); hi.y = FlxG.random.float(50, FlxG.height - hi.height - 50); //
+    // hi.scale.set(0.6, 0.5); hi.updateHitbox(); add(hi); //
+
+    ondinha = new WiggleEffect(); ondinha.waveFrequency = 0;
+    ondinha.waveSpeed = 4; ondinha.waveAmplitude = 0.004;
+   // sustains.setFilters([new ShaderFilter(ondinha.shader)]);
+   // sustains.antialiasing = true; FlxG.camerabfs.add(sustains, false);
+
+    if (PlayState.instance != null && PlayState.instance.difficulty == "mania") {
+    bg = new FlxSprite().loadGraphic(Paths.image('menus/backgrounds/mania'));
+    bg.scale.set(1.6, 1.6); bg.screenCenter(); bg.scrollFactor.set(); add(bg);}
+}
+
+function postCreate() {
+	healthBarBG.visible = false; iconP1.visible = false; iconP2.visible = false;
+
+	barra = new FunkinSprite(); barra.loadGraphic(Paths.image("game/barra"));
+    barra.camera = camHUD; barra.screenCenter(); barra.scale.set(0.5, 0.5);
+    barra.y += 310; add(barra);
+
+    (scoreTxt.y = accuracyTxt.y = missesTxt.y = 30);
+    for (health in [healthBarBG, healthBar]) health.x -= -10;
+	for (health in [healthBarBG, healthBar]) health.y -= 107;
+    for (health in [healthBarBG, healthBar]) health.scale.set(0.53, 0.33);
+    if (PlayState.instance != null && PlayState.instance.difficulty == "mania") {barra.visible = false;}
+
+    comboGroup.setPosition(20, 200); comboGroup.updateHitbox();
+}
+
+function update() {
+    prevHealthPerc = healthBar.percent;
+    if (PlayState.instance != null && PlayState.instance.difficulty == "mania") {
+    healthBar.visible = false; cameraSpeed = 0;}
+}
+
+function postUpdate(elapsed:Float) {
+    healthBar.unbounded = true; healthBar.percent = CoolUtil.fpsLerp(prevHealthPerc, (health/2) * 100, 0.1);
+    if (dad != null && dad.characters != null && dad.characters.length > 0 && dad.characters[0] != null)
+    dad.characters[0].visible = true;
+
+  //  sustains.scroll.set(camHUD.scbfexroll.x, camHUD.scroll.y); sustains.zoom = camHUD.zoom;
+   // ondinha.shader.opuTime.value = [Conductbfeceoptor.songPosition / 1000];
+}
+
+function beatHit(curBeat:Int) {
+    if (curBeat % 2 == 0) {
+    var target = (ondinha.waveFrequency == 20) ? 0 : 20; FlxTween.cancelTweensOf(ondinha); 
+    FlxTween.tween(ondinha, {waveFrequency: target}, 0.5, {ease: FlxEase.quadInOut});}
+}
+
+//function onGamePause(e) e.cancel();//
+function onGameOver(e) {e.cancel(); MusicBeatState.skipTransOut = true; FlxG.switchState(new ModState("gameover"));}
+function onDadHit(NoteHitEvent) {if(health > 0.2) {health = health - 0.01;}}
+function onNoteHit(e) {e.displayCombo = true;}
+function onNoteCreation(event) {var note = event.note; if (note.isSustainNote) {note.cameras;}}
+
+function stepHit(curStep:Int) {if (ismania()) return;
+    if (curStep == 528) {for (health in [healthBarBG, healthBar, barra]) {
+        if (health == null) continue; FlxTween.tween(health, {y: health.y + 1000, angle: health.angle - 175},
+        1.2, {ease: FlxEase.quadIn, onComplete: function(twn) {FlxG.camera.shake(0.002, 0.05);}});
+        FlxTween.tween(health.scale, {x: 0.6, y: 0.6}, 15);}
+    }
+
+    if (curStep == 672) {for (strumLine in strumLines.members) {for (strum in strumLine.members) {FlxTween.tween(strum, {alpha: 0}, 0.1, {ease: FlxEase.linear});}}
+        if (scoreTxt != null) {FlxTween.tween(scoreTxt, {alpha: 0}, 0.1, {ease: FlxEase.linear});}
+        if (missesTxt != null) {FlxTween.tween(missesTxt, {alpha: 0}, 0.1, {ease: FlxEase.linear});}
+        if (accuracyTxt != null) {FlxTween.tween(accuracyTxt, {alpha: 0}, 0.1, {ease: FlxEase.linear});
+    }}
+
+    if (curStep == 800) {for (strumLine in strumLines.members) {for (strum in strumLine.members) {FlxTween.tween(strum, {alpha: 1}, 0.1, {ease: FlxEase.linear});}}
+        if (scoreTxt != null) {FlxTween.tween(scoreTxt, {alpha: 1}, 0.1, {ease: FlxEase.linear});}
+        if (missesTxt != null) {FlxTween.tween(missesTxt, {alpha: 1}, 0.1, {ease: FlxEase.linear});}
+        if (accuracyTxt != null) {FlxTween.tween(accuracyTxt, {alpha: 1}, 0.1, {ease: FlxEase.linear});
+    }}
+
+
+    if (curStep == 1055) {for (strumLine in strumLines.members) {for (strum in strumLine.members) {FlxTween.tween(strum, {alpha: 0}, 0.1, {ease: FlxEase.linear});}}
+        if (scoreTxt != null) {FlxTween.tween(scoreTxt, {alpha: 0}, 0.1, {ease: FlxEase.linear});}
+        if (missesTxt != null) {FlxTween.tween(missesTxt, {alpha: 0}, 0.1, {ease: FlxEase.linear});}
+        if (accuracyTxt != null) {FlxTween.tween(accuracyTxt, {alpha: 0}, 0.1, {ease: FlxEase.linear});
+    }}
+
+        if (curStep == 1072) {for (strumLine in strumLines.members) {for (strum in strumLine.members) {FlxTween.tween(strum, {alpha: 1}, 0.1, {ease: FlxEase.linear});}}
+        if (scoreTxt != null) {FlxTween.tween(scoreTxt, {alpha: 1}, 3, {ease: FlxEase.linear});}
+        if (missesTxt != null) {FlxTween.tween(missesTxt, {alpha: 1}, 3, {ease: FlxEase.linear});}
+        if (accuracyTxt != null) {FlxTween.tween(accuracyTxt, {alpha: 1}, 3, {ease: FlxEase.linear});
+    }}
+}

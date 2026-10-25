@@ -1,0 +1,9 @@
+<character x="-5" y="100" sprite="mickey_mouse (1)" scale="1.6" camx="105" camy="50" icon="icon-dad" color="#525951">
+	<anim name="idle" anim="Idle" fps="25" loop="true" />
+	<anim name="singLEFT" anim="Left" x="-8" y="-2" fps="35" />
+	<anim name="singDOWN" anim="Down" x="-11" y="2" fps="35" />
+	<anim name="singUP" anim="Up" y="50" fps="35" />
+	<anim name="singRIGHT" anim="Right" x="-10" y="-1" fps="35" />
+	<anim name="laugh1" anim="Laugh" x="19" y="22" fps="33" indices="1,2,3,4,5,6,7,8,9" />
+	<anim name="laugh2" anim="Laugh" x="19" y="22" fps="33" indices="10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29" />
+</character>

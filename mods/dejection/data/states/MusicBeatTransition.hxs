@@ -1,0 +1,19 @@
+import flixel.tweens.FlxTween;
+var transitionCamera = new FlxCamera(0, 0, FlxG.width, FlxG.height); var fadeSpr:FlxSprite;
+transitionCamera.bgColor = FlxColor.TRANSPARENT; FlxG.cameras.add(transitionCamera, false);
+
+function create() {
+    allowSkip = false; transitionTween.cancel();
+    remove(blackSpr); remove(transitionSprite);
+
+    // hi = new FlxSprite(0, 0); hi.frames = Paths.getSparrowAtlas("menus/hello"); //
+    // hi.animation.addByPrefix("HI", "hi", 30, true); hi.animation.play("HI"); //
+    // hi.x = FlxG.random.float(50, FlxG.width - hi.width - 50); hi.y = FlxG.random.float(50, FlxG.height - hi.height - 50); //
+    // hi.scale.set(0.6, 0.5); hi.updateHitbox(); add(hi); //
+
+    fadeSpr = new FlxSprite() .makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
+    fadeSpr.cameras = [transitionCamera]; fadeSpr.scrollFactor.set(); fadeSpr.alpha = newState != null ? 0 : 1;
+    add(fadeSpr);
+
+    FlxTween.tween(fadeSpr, {alpha: newState != null ? 1 : 0}, 0.45, {onComplete: function(_) {finish();}});
+}

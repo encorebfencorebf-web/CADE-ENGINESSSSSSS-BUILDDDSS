@@ -1,0 +1,111 @@
+// livraria (imports) e basicos do codename //
+import funkin.backend.utils.ShaderResizeFix;
+import funkin.backend.utils.WindowUtils;
+import funkin.backend.system.framerate.Framerate;
+
+// livraria (imports) e basicos pra nova resolução //
+import openfl.system.Capabilities; import openfl.Lib;
+var largura:Int = 0, altitude:Int = 0;
+
+// sistema inspirado do Hello Again John Doe de @RILEYTRONIC, ent, obrigado aos envolvidos //
+function preStateSwitch() {FlxG.mouse.visible = true;}
+function new() {windowShit(1840, 864, 0.8);}
+
+// proporção pra nova resolução //
+function aspectShit(width:Int, height:Int):Void {
+    var idk1 = height, idk2 = width; while (idk1 != 0) {idk1 = idk2 % idk1; idk2 = height;}
+    largura = Math.floor(Capabilities.screenResolutionX * ((height / idk2) / (width / idk2))) >
+    Capabilities.screenResolutionY ? Math.floor(Capabilities.screenResolutionY * ((width / idk2) / (height / idk2))) : Capabilities.screenResolutionX;
+    altitude = Math.floor(Capabilities.screenResolutionX * ((height / idk2) / (width / idk2))) >
+    Capabilities.screenResolutionY ? Capabilities.screenResolutionY : Math.floor(Capabilities.screenResolutionX * ((height / idk2) / (width / idk2)));
+}
+
+ //state
+
+static var MAIN_STATE:String = "principal";
+
+static var FREEPLAY_STATE:String = "dev";
+
+function preStateSwitch() {
+// BF.EXE_OPT
+// Bf.exe_opt
+// BF.EXE_OPT
+// BF_EXE_OPT
+    var requested = FlxG.game._requestedState;
+// Bf.exe_opt
+
+// BF.EXE_OPT
+// BFeXe_OpT
+// BF_EXE_OPT
+// Port by BF.EXE_OPT
+    if (requested == null)
+// BF.EXE_OPT
+        return;
+// BF.EXE_OPT
+// BF.EXE.OPT
+// Bf.3xe_opt
+// BF.EXE_OPT
+// Port by BF.EXE_OPT
+
+// BF_EXE_OPT
+// Bf.exe_opt
+// BF.EXE.OPT
+    if (requested is MainMenuState) {
+// BF_EXE_OPT
+        FlxG.game._requestedState = new ModState(MAIN_STATE);
+// BF.EXE.OPT
+// BFEXE_OPT
+// BFEXE_OPT
+// Bf.3xe_opt
+// BF.EXE_OPT
+// Bff.eexxe_opt
+        return;
+// BF.EXE_OPT
+// Port by BF.EXE_OPT
+    }
+// BF_EXE_OPT
+// Bff.eexxe_opt
+// Bf.3xe_opt
+
+// BF.EXE_OPT
+// BFEXE_OPT
+    if (requested is FreeplayState) {
+// BFEXE_OPT
+// BF.EXE_OPT
+// Bff.eexxe_opt
+        FlxG.game._requestedState = new ModState(FREEPLAY_STATE);
+// Bf.exe_opt
+// BFeXe_OpT
+// BF.EXE_OPT
+        return;
+// Bf.3xe_opt
+    }
+// BF.EXE_OPT
+// Bf.3xe_opt
+    Framerate.codenameBuildField.text="Port & Optmized By 
+    BF.EXE_OPT";
+// Bf.3xe_opt
+// BF.EXE_OPT
+// Bf.exe_opt
+}
+
+// função principal pra nova resolução //
+public static function windowShit(newWidth:Int, newHeight:Int, ?winScale:Float = 0.9){
+    if (newWidth != 1280 || newHeight != 720) {aspectShit(newWidth, newHeight); FlxG.resizeWindow(largura * winScale, altitude * winScale);}
+    else {FlxG.resizeWindow(newWidth, newHeight);} FlxG.resizeGame(newWidth, newHeight);
+    FlxG.scaleMode.width = FlxG.width = FlxG.initialWidth = newWidth;
+    FlxG.scaleMode.height = FlxG.height = FlxG.initialHeight = newHeight;
+    ShaderResizeFix.doResizeFix = true; ShaderResizeFix.fixSpritesShadersSizes();
+    window.x = Capabilities.screenResolutionX/2 - window.width/2;
+    window.y = Capabilities.screenResolutionY/2 - window.height/2;
+}
+
+// atalhos e quando o jogo fecha volta ao normal sla //
+function update(elapsed:Float) {if (FlxG.keys.justPressed.F5) FlxG.resetState();}
+function destroy() {windowShit(1024, 768, 0.8);}
+
+// cursor personalizado que o @larpozoh fez //
+public static var cursor = Assets.getBitmapData(Paths.image('wiicursor'));
+FlxG.mouseControls = FlxG.mouse.enabled = FlxG.mouse.visible = true;
+FlxG.mouse.load(cursor, 0.03); FlxG.mouse.useSystemCursor = false;
+public static function changeMouse(mouse:String) FlxG.mouse.load(mouse, 0.9);

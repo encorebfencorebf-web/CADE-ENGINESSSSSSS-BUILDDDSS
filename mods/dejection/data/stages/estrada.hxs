@@ -1,0 +1,29 @@
+import flixel.tweens.FlxTween; import flixel.tweens.FlxEase;
+import funkin.backend.shaders.WiggleEffect; import openfl.filters.ShaderFilter;
+var principal:FunkinSprite; var ondinha:WiggleEffect;
+
+function ismania():Bool {return PlayState.instance != null && PlayState.instance.difficulty == "mania";}
+
+function create() {
+    // hi = new FlxSprite(0, 0); hi.frames = Paths.getSparrowAtlas("menus/hello"); //
+    // hi.animation.addByPrefix("HI", "hi", 30, true); hi.animation.play("HI"); //
+    // hi.x = FlxG.random.float(50, FlxG.width - hi.width - 50); hi.y = FlxG.random.float(50, FlxG.height - hi.height - 50); //
+    // hi.scale.set(0.6, 0.5); hi.updateHitbox(); add(hi); //
+
+    ondinha = new WiggleEffect();
+    ondinha.waveFrequency = 0;
+    ondinha.waveSpeed = 0;
+    ondinha.waveAmplitude = 0.003;
+    if (principal != null) {principal.shader = ondinha.shader;}
+}
+
+function stepHit(curStep:Int) {if (ismania()) return;
+    if (curStep == 400) {FlxTween.tween(ondinha, {waveFrequency: 50, waveSpeed: 1}, 15, {ease: FlxEase.quadInOut});}
+    if (curStep == 528) {FlxTween.tween(principal, {alpha: 0}, 1.6, {ease: FlxEase.quadIn});}
+    if (curStep == 770) {FlxTween.tween(principal, {alpha: 1}, 1, {ease: FlxEase.quadIn});}
+    if (curStep == 800) {ondinha.waveFrequency = 5; ondinha.waveSpeed = 1;}
+    if (curStep == 928) {ondinha.waveFrequency = 50; ondinha.waveSpeed = 1;}
+    if (curStep == 1055) {FlxTween.tween(principal, {alpha: 0}, 0.1, {ease: FlxEase.quadIn});}
+}
+
+function update(elapsed:Float) {if (ondinha != null) {ondinha.shader.uTime.value = [Conductor.songPosition / 1000];}}

@@ -1,0 +1,595 @@
+// ============================================
+// IMPORTS
+// ============================================
+
+import funkin.options.OptionsMenu;
+import funkin.menus.ModSwitchMenu;
+import funkin.editors.EditorPicker;
+import funkin.backend.MusicBeatState;
+
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+import flixel.util.FlxColor;
+import flixel.math.FlxMath;
+import flixel.FlxSprite;
+import flixel.FlxG;
+import flixel.util.FlxTimer;
+
+import hxvlc.flixel.FlxVideoSprite;
+
+
+// ============================================
+// VARIABLES
+// ============================================
+
+var elementosvalor:Int = 0;
+var elementoselecionado:Bool = false;
+
+var elementos:Array<FlxSprite> = [];
+var particulas:Array<FlxSprite> = [];
+
+var optionShit:Array<String> = [
+    "1",
+    "2",
+    "3"
+];
+
+var cutscene:FlxVideoSprite;
+
+
+// ============================================
+// CREATE
+// ============================================
+
+function create()
+{
+    // ========================================
+    // MUSIC
+    // ========================================
+
+    CoolUtil.playMenuSong(true);
+
+
+    // ========================================
+    // BACKGROUND
+    // ========================================
+
+    bg = new FunkinSprite(0, 0);
+
+    bg.loadGraphic(
+        Paths.image("menus/backgrounds/parque")
+    );
+
+    bg.alpha = 1;
+    bg.scale.set(1.44, 1.64);
+    bg.screenCenter();
+
+    add(bg);
+
+
+    // ========================================
+    // LAYOUT
+    // ========================================
+
+    shadowthehedgehog = new FunkinSprite(800, 0);
+
+    shadowthehedgehog.loadGraphic(
+        Paths.image("menus/portraitshots/layout")
+    );
+
+    shadowthehedgehog.alpha = 0.95;
+    shadowthehedgehog.scale.set(5, 1.5);
+
+    add(shadowthehedgehog);
+
+
+    // ========================================
+    // VIDEO
+    // ========================================
+    //
+    // VIDEO DI-LOAD SAJA.
+    //
+    // TIDAK PLAY.
+    // TIDAK DITAMPILKAN.
+    //
+    // Ini sengaja untuk memastikan video
+    // bukan penyebab parque tertutup.
+    // ========================================
+
+    cutscene = new FlxVideoSprite();
+
+    if (cutscene.load(Paths.video("cutscene", "mp4")))
+    {
+        cutscene.visible = false;
+        cutscene.alpha = 0;
+
+        trace("Cutscene loaded successfully.");
+    }
+    else
+    {
+        trace("Cutscene failed to load.");
+    }
+
+
+    // ========================================
+    // PARTICLES
+    // ========================================
+
+    for (i in 0...50)
+    {
+        var p = new FlxSprite(
+            FlxG.random.float(
+                0,
+                FlxG.width
+            ),
+            FlxG.random.float(
+                0,
+                FlxG.height
+            )
+        );
+
+        p.makeGraphic(4, 4);
+
+        p.alpha = FlxG.random.float(
+            0.1,
+            0.4
+        );
+
+        p.scale.set(
+            FlxG.random.float(0.5, 1.5),
+            FlxG.random.float(0.5, 1.5)
+        );
+
+        p.velocity.set(
+            FlxG.random.float(-20, 20),
+            FlxG.random.float(-20, 20)
+        );
+
+        particulas.push(p);
+
+        add(p);
+    }
+
+
+    // ========================================
+    // MENU
+    // ========================================
+
+    var menuX:Float = 100;
+    var menuY:Float = 100;
+    var menuSpacing:Float = 200;
+
+    var mapa:Map<String, String> = [
+        "1" => "play",
+        "2" => "credito",
+        "3" => "config"
+    ];
+
+
+    for (i in 0...optionShit.length)
+    {
+        var option:String =
+            optionShit[i];
+
+        var elementosmenu =
+            new FlxSprite();
+
+        elementosmenu.frames =
+            Paths.getSparrowAtlas(
+                "menus/portraitshots/menuitems"
+            );
+
+        var animName:String =
+            mapa[option];
+
+        elementosmenu.animation.addByPrefix(
+            "idle",
+            animName,
+            20
+        );
+
+        elementosmenu.animation.addByPrefix(
+            "selected",
+            animName,
+            20
+        );
+
+        elementosmenu.animation.play(
+            "idle"
+        );
+
+        elementosmenu.ID = i;
+
+        elementosmenu.scrollFactor.set(
+            0,
+            0
+        );
+
+        elementosmenu.scale.set(
+            0.8,
+            0.8
+        );
+
+        elementosmenu.updateHitbox();
+
+        elementosmenu.setPosition(
+            menuX,
+            menuY + (i * menuSpacing)
+        );
+
+        elementos.push(
+            elementosmenu
+        );
+
+        add(elementosmenu);
+    }
+
+
+    mudandomodo(
+        0,
+        true
+    );
+
+
+    // ========================================
+    // HINT
+    // ========================================
+
+    var hint = new FunkinText(
+        0,
+        FlxG.height - 60,
+        FlxG.width,
+        "[up/down] nav - [enter/space/click] play",
+        20
+    );
+
+    hint.font =
+        Paths.font("vcr.ttf");
+
+    hint.color =
+        0xFF666666;
+
+    hint.alignment =
+        "center";
+
+    add(hint);
+
+
+    trace(
+        "PARQUE LOADED: "
+        + bg.width
+        + "x"
+        + bg.height
+    );
+}
+
+
+// ============================================
+// UPDATE
+// ============================================
+
+function update(elapsed:Float)
+{
+    // ========================================
+    // PARTICLES
+    // ========================================
+
+    if (!elementoselecionado)
+    {
+        for (p in particulas)
+        {
+            if (p == null)
+                continue;
+
+            p.x +=
+                p.velocity.x * elapsed;
+
+            p.y +=
+                p.velocity.y * elapsed;
+
+            if (p.x > FlxG.width)
+                p.x = 0;
+
+            if (p.x < 0)
+                p.x = FlxG.width;
+
+            if (p.y > FlxG.height)
+                p.y = 0;
+
+            if (p.y < 0)
+                p.y = FlxG.height;
+        }
+
+
+        // ====================================
+        // UP
+        // ====================================
+
+        if (
+            controls.UP_P ||
+            FlxG.keys.justPressed.UP
+        )
+        {
+            mudandomodo(-1);
+        }
+
+
+        // ====================================
+        // DOWN
+        // ====================================
+
+        if (
+            controls.DOWN_P ||
+            FlxG.keys.justPressed.DOWN
+        )
+        {
+            mudandomodo(1);
+        }
+
+
+        // ====================================
+        // ACCEPT
+        // ====================================
+
+        if (
+            controls.ACCEPT ||
+            FlxG.keys.justPressed.ENTER ||
+            FlxG.keys.justPressed.SPACE
+        )
+        {
+            selecionandomodo();
+        }
+
+
+        // ====================================
+        // EDITOR
+        // ====================================
+
+        if (FlxG.keys.justPressed.SEVEN)
+        {
+            persistentUpdate = false;
+            persistentDraw = true;
+
+            openSubState(
+                new EditorPicker()
+            );
+        }
+
+
+        // ====================================
+        // MOD SWITCH
+        // ====================================
+
+        if (controls.SWITCHMOD)
+        {
+            persistentUpdate = false;
+            persistentDraw = true;
+
+            openSubState(
+                new ModSwitchMenu()
+            );
+        }
+    }
+
+
+    // ========================================
+    // TRAILER
+    // ========================================
+
+    if (
+        FlxG.keys.justPressed.NINE ||
+        FlxG.keys.justPressed.NUMPADNINE
+    )
+    {
+        trailer();
+        return;
+    }
+
+
+    // ========================================
+    // MOUSE
+    // ========================================
+
+    for (spr in elementos)
+    {
+        if (spr == null)
+            continue;
+
+        if (FlxG.mouse.overlaps(spr))
+        {
+            if (spr.ID != elementosvalor)
+            {
+                elementosvalor =
+                    spr.ID;
+
+                mudandomodo(
+                    0,
+                    true
+                );
+            }
+
+            if (
+                FlxG.mouse.justPressed &&
+                !elementoselecionado
+            )
+            {
+                selecionandomodo();
+            }
+
+            break;
+        }
+    }
+
+
+    // ========================================
+    // BACK
+    // ========================================
+
+    if (controls.BACK)
+    {
+        window.close();
+    }
+}
+
+
+// ============================================
+// TRAILER
+// ============================================
+
+function trailer()
+{
+    FlxG.camera.fade(
+        FlxColor.BLACK,
+        1,
+        false,
+        function()
+        {
+            FlxG.switchState(
+                new ModState("trailer")
+            );
+        },
+        true
+    );
+}
+
+
+// ============================================
+// CHANGE SELECTION
+// ============================================
+
+function mudandomodo(
+    huh:Int = 0,
+    isStarting:Bool = false
+)
+{
+    if (!isStarting)
+    {
+        FlxG.sound.play(
+            Paths.sound("scrollMenu")
+        );
+    }
+
+
+    elementosvalor =
+        FlxMath.wrap(
+            elementosvalor + huh,
+            0,
+            optionShit.length - 1
+        );
+
+
+    FlxG.save.data.menuSelection =
+        elementosvalor;
+
+    FlxG.save.flush();
+
+
+    for (spr in elementos)
+    {
+        if (spr == null)
+            continue;
+
+        spr.animation.play(
+            "idle"
+        );
+
+        spr.scale.set(
+            0.8,
+            0.8
+        );
+
+        spr.alpha = 1;
+
+        spr.color =
+            FlxColor.GRAY;
+
+
+        if (spr.ID == elementosvalor)
+        {
+            spr.animation.play(
+                "selected"
+            );
+
+            spr.color =
+                FlxColor.WHITE;
+        }
+    }
+}
+
+
+// ============================================
+// SELECT MENU
+// ============================================
+
+function selecionandomodo()
+{
+    if (elementoselecionado)
+        return;
+
+    elementoselecionado = true;
+
+
+    FlxG.sound.play(
+        Paths.sound("confirmMenu")
+    );
+
+
+    // ========================================
+    // PLAY
+    // ========================================
+
+    if (
+        optionShit[elementosvalor]
+        == "1"
+    )
+    {
+        MusicBeatState.skipTransOut =
+            true;
+
+        FlxG.switchState(
+            new FreeplayState()
+        );
+
+        return;
+    }
+
+
+    // ========================================
+    // OTHER OPTIONS
+    // ========================================
+
+    FlxTween.tween(
+        FlxG.camera,
+        {zoom: 2},
+        2,
+        {
+            ease:
+                FlxEase.expoInOut,
+
+            onComplete:
+                function(_)
+                {
+                    switch (
+                        optionShit[
+                            elementosvalor
+                        ]
+                    )
+                    {
+                        case "2":
+
+                            FlxG.switchState(
+                                new ModState(
+                                    "creditos"
+                                )
+                            );
+
+                        case "3":
+
+                            FlxG.switchState(
+                                new OptionsMenu()
+                            );
+                    }
+                }
+        }
+    );
+}

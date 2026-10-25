@@ -1,0 +1,492 @@
+var galera:Array<String> = [
+    "sillyboose",
+    "pastelkk",
+    "henrique",
+    "jogadorice",
+    "laprozoh",
+    "polsed",
+    "bfexeopt"
+];
+
+var feitos:Array<String> = [
+    "sillyboose - Director, Lead Artist and Animator",
+    "pastel - Director and Lead Composer",
+    "henryproductions - Lead Animator",
+    "jogadorice - Main Programmer, Voices Assistance and Charter",
+    "laprozoh - Artist, Mickey Mouse VA and Charter",
+    "polsed - Menu Composer",
+    "BFEXEOPT - Android Porting & Optimization"
+];
+
+var mensagens:Array<String> = [
+    "''Meu amor me abandonou''",
+    "''LATE NIGHT MELANCHOLY''",
+    "''quando vc junta a bola azul com a bola vermelha vc recebe uma bola com uma cor diferente a bola roxa''",
+    "''to comendo açai, ração?, açai!''",
+    "''K-Kira... E-eu acho melhor não Kira...''",
+    "''WI part 1 supremacy''",
+    "''PORT & OPTIMIZED BY BFEXEOPT''"
+];
+
+import flixel.util.FlxColor;
+import flixel.tweens.FlxTween;
+import flixel.group.FlxTypedGroup;
+
+import funkin.mobile.controls.FlxDPadMode;
+import funkin.mobile.controls.FlxActionMode;
+
+var selectedIndex:Int = 0;
+
+var texto1:FunkinText;
+var texto2:FunkinText;
+
+var originalX:Array<Float> = [];
+var originalY:Array<Float> = [];
+
+var icons:Array<FunkinSprite> = [];
+
+function create()
+{
+    // CAMERA
+
+    FlxG.camera.shake(
+        0.001,
+        0.1
+    );
+
+    new FlxTimer().start(
+        0.1,
+        function(tmr:FlxTimer)
+        {
+            FlxG.camera.shake(
+                0.001,
+                0.1
+            );
+        },
+        0
+    );
+
+    bg = new FunkinSprite()
+        .loadGraphic(
+            Paths.image(
+                "menus/backgrounds/creditos"
+            )
+        );
+
+    bg.scale.set(
+        1.5,
+        1.2
+    );
+
+    bg.screenCenter();
+
+    add(bg);
+
+
+    // TO TEXTBfex3o4pt
+
+    texto1 = new FunkinText(
+        0,
+        50,
+        FlxG.width,
+        "",
+        32
+    );
+
+    texto1.font =
+        Paths.font("vcr.ttf");
+
+    texto1.alignment =
+        "center";
+
+    add(texto1);
+
+
+    // ICONS
+
+    var total:Int =
+        galera.length;
+
+    var spacing:Float =
+        250;
+
+    var startX:Float =
+        (
+            FlxG.width
+            - (total - 1) * spacing
+        ) / 2;
+
+    var centerY:Float =
+        FlxG.height / 2 - 50;
+
+
+    for (i in 0...total)
+    {
+        var icon:FunkinSprite =
+            new FunkinSprite();
+
+        icon.loadGraphic(
+            Paths.image(
+                "menus/shoutouts/"
+                + galera[i]
+            )
+        );
+
+        icon.ID =
+            i;
+
+        icon.scale.set(
+            1.5,
+            1.5
+        );
+
+        icon.updateHitbox();
+
+        icon.x =
+            startX
+            + i * spacing
+            - icon.width / 2;
+
+        icon.y =
+            centerY
+            - icon.height / 2;
+
+        originalX.push(
+            icon.x
+        );
+
+        originalY.push(
+            icon.y
+        );
+
+        add(icon);
+
+        icons.push(icon);
+    }
+
+
+    // MESSAGE
+
+    texto2 = new FunkinText(
+        0,
+        FlxG.height - 100,
+        FlxG.width,
+        "",
+        28
+    );
+
+    texto2.font =
+        Paths.font("vcr.ttf");
+
+    texto2.color =
+        FlxColor.WHITE;
+
+    texto2.alignment =
+        "center";
+
+    texto2.alpha =
+        0;
+
+    add(texto2);
+
+
+    // HINT
+
+    var hint:FunkinText =
+        new FunkinText(
+            0,
+            FlxG.height - 60,
+            FlxG.width,
+            "[left/right] nav - [esc] back",
+            20
+        );
+
+    hint.font =
+        Paths.font("vcr.ttf");
+
+    hint.color =
+        0xFF666666;
+
+    hint.alignment =
+        "center";
+
+    add(hint);
+
+
+    // MOBILE CONTROLS
+
+    addVPad(
+        FlxDPadMode.NONE,
+        FlxActionMode.B
+    );
+
+    addVPadCamera();
+
+
+    // INITIAL SELECTION
+
+    selecionandomcoiso();
+}
+
+
+// ============================================
+// UPDATE
+// ============================================
+
+function update(elapsed:Float)
+{
+    // LEFT
+
+    if (
+        controls.LEFT_P ||
+        FlxG.keys.justPressed.LEFT
+    )
+    {
+        if (selectedIndex > 0)
+        {
+            selectedIndex--;
+
+            selecionandomcoiso();
+
+            FlxG.sound.play(
+                Paths.sound("scrollMenu")
+            );
+
+            FlxG.camera.flash(
+                FlxColor.BLACK,
+                0.2,
+                null,
+                true
+            );
+        }
+    }
+
+
+    // RIGHT
+
+    if (
+        controls.RIGHT_P ||
+        FlxG.keys.justPressed.RIGHT
+    )
+    {
+        if (
+            selectedIndex
+            < feitos.length - 1
+        )
+        {
+            selectedIndex++;
+
+            selecionandomcoiso();
+
+            FlxG.sound.play(
+                Paths.sound("scrollMenu")
+            );
+
+            FlxG.camera.flash(
+                FlxColor.BLACK,
+                0.2,
+                null,
+                true
+            );
+        }
+    }
+
+
+    // MOUSE / TOUCH
+    //
+    // Hanya untuk memilih icon.
+    // Tidak ada FlxG.openURL().
+    // Jadi ACCEPT/touch tidak membuka link.
+
+    for (icon in icons)
+    {
+        if (
+            FlxG.mouse.overlaps(icon)
+        )
+        {
+            if (
+                icon.ID != selectedIndex
+            )
+            {
+                selectedIndex =
+                    icon.ID;
+
+                FlxG.camera.flash(
+                    FlxColor.BLACK,
+                    0.2,
+                    null,
+                    true
+                );
+
+                FlxG.sound.play(
+                    Paths.sound("scrollMenu")
+                );
+
+                selecionandomcoiso();
+            }
+
+            break;
+        }
+    }
+
+
+    // BACK
+
+    if (
+        controls.BACK ||
+        FlxG.keys.justPressed.ESCAPE
+    )
+    {
+        FlxG.switchState(
+            new ModState("principal")
+        );
+
+        return;
+    }
+
+
+    // TEXT
+
+    texto1.text =
+        feitos[selectedIndex]
+        .toUpperCase();
+
+    texto1.alpha =
+        1;
+
+    texto2.text =
+        mensagens[selectedIndex];
+
+    texto2.alpha =
+        FlxMath.lerp(
+            texto2.alpha,
+            1,
+            0.1
+        );
+}
+
+
+// ============================================
+// SELECTION ANIMATION
+// ============================================
+
+function selecionandomcoiso()
+{
+    for (i in 0...icons.length)
+    {
+        var icon =
+            icons[i];
+
+        FlxTween.cancelTweensOf(
+            icon
+        );
+
+        FlxTween.cancelTweensOf(
+            icon.scale
+        );
+
+
+        if (i == selectedIndex)
+        {
+            icon.color =
+                FlxColor.WHITE;
+
+            FlxTween.tween(
+                icon,
+                {
+                    y:
+                        originalY[i]
+                        - 10
+                },
+                0.3,
+                {
+                    ease:
+                        FlxEase.quadOut
+                }
+            );
+
+            FlxTween.tween(
+                icon.scale,
+                {
+                    x: 2.0,
+                    y: 2.0
+                },
+                0.4,
+                {
+                    ease:
+                        FlxEase.elasticOut
+                }
+            );
+        }
+        else
+        {
+            icon.color =
+                FlxColor.GRAY;
+
+            FlxTween.tween(
+                icon,
+                {
+                    y:
+                        originalY[i]
+                },
+                0.3,
+                {
+                    ease:
+                        FlxEase.quadOut
+                }
+            );
+
+            FlxTween.tween(
+                icon.scale,
+                {
+                    x: 1.8,
+                    y: 1.8
+                },
+                0.4,
+                {
+                    ease:
+                        FlxEase.elasticOut
+                }
+            );
+        }
+
+        icon.x =
+            originalX[i];
+    }
+}
+
+
+// ============================================
+// MOUSE OVER
+// ============================================
+
+function onMouseOver()
+{
+    for (i in 0...icons.length)
+    {
+        if (
+            FlxG.mouse.overlaps(
+                icons[i]
+            )
+        )
+        {
+            if (
+                selectedIndex != i
+            )
+            {
+                selectedIndex =
+                    i;
+
+                selecionandomcoiso();
+
+                FlxG.sound.play(
+                    Paths.sound(
+                        "scrollMenu"
+                    )
+                );
+            }
+
+            break;
+        }
+    }
+}

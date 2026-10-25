@@ -1,0 +1,184 @@
+import flixel.FlxG; import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase; import flixel.util.FlxTimer;
+import funkin.backend.scripting.events.note.NoteHitEvent;
+
+public var saturationGame:CustomShader = new CustomShader('saturation');
+saturationGame.contrast = 10; saturationGame.saturation = 1; saturationGame.brightness = 0;
+var shaderTime = 0;
+
+import hxvlc.flixel.FlxVideoSprite;
+var cutscene:FlxVideoSprite; var cutscene1:Bool = false; var cutscene2:Float = 0; var cutscene3:Float = 13.7;
+var strumY:Array<Float> = [];
+
+function ismania():Bool {return PlayState.instance != null && PlayState.instance.difficulty == "mania";}
+
+function create() {
+    if (ismania()) {
+        saturationGame.contrast = 1; saturationGame.saturation = 1; saturationGame.brightness = 0;
+    }
+
+    // hi = new FlxSprite(0, 0); hi.frames = Paths.getSparrowAtlas("menus/hello"); //
+    // hi.animation.addByPrefix("HI", "hi", 30, true); hi.animation.play("HI"); //
+    // hi.x = FlxG.random.float(50, FlxG.width - hi.width - 50); hi.y = FlxG.random.float(50, FlxG.height - hi.height - 50); //
+    // hi.scale.set(0.6, 0.5); hi.updateHitbox(); add(hi); //
+
+    if (gf != null)
+    gf.visible = false;
+    cutscene = new FlxVideoSprite(); cutscene.load(Paths.video("cutscene"));
+    cutscene.cameras = [camHUD]; cutscene.scale.set(2.2, 2.2);
+    cutscene.alpha = 0; cutscene.visible = false; cutscene.screenCenter();
+    cutscene.x = 520; cutscene.y = 165;
+    insert(0, cutscene); cutscene.stop();
+}
+
+function postCreate() {
+    var chars = strumLines.members[0].characters; if (chars.length > 1) {chars[0].visible = true; chars[1].visible = false;
+    if (chars.length > 2) chars[2].visible = false; if (chars.length > 3) chars[3].visible = false;}
+}
+
+function stepHit(curStep:Int) {if (ismania()) return;
+    if (curStep == 1) {
+        FlxTween.tween(saturationGame, {contrast: 1.0}, 1.75, {ease: FlxEase.circInOut});
+    }
+
+    if (curStep == 528) {
+        FlxTween.tween(saturationGame, {contrast: 5.0}, 1.75, {ease: FlxEase.circInOut});
+        if (strumLines.members.length > 0) {var dadStrums = strumLines.members[0]; for (i in 0...dadStrums.members.length) {
+            var strum = dadStrums.members[i]; var delay = i * 0.08; var rotDir = (i % 2 == 0) ? 1 : -1;
+            FlxTween.tween(strum, {y: strum.y + 850, angle: strum.angle + 360 * rotDir}, 1.2, {ease: FlxEase.quadIn, startDelay: delay, onComplete: function(twn) {FlxG.camera.shake(0.002, 0.04);}});
+            FlxTween.tween(strum.scale, {x: 0.6, y: 0.6}, 1.2, {startDelay: delay}); FlxTween.tween(strum, {alpha: 0.3}, 1.2, {startDelay: delay});}
+        }
+    }
+
+    if (curStep == 544) {var chars = strumLines.members[0].characters;
+        if (chars.length > 1) {chars[0].visible = false; chars[1].visible = true;}
+        if (strumLines.members.length > 1)
+        {
+            var bfChars = strumLines.members[1].characters;
+
+            if (bfChars != null)
+            {
+                for (char in bfChars)
+                {
+                    if (char != null)
+                        char.alpha = 0;
+                }
+            }
+        }
+    }
+
+    if (curStep == 668) {
+        FlxTween.tween(saturationGame, {saturation: 2}, 1, {ease: FlxEase.circInOut});
+    }
+
+    if (curStep == 672 && !cutscene1) {cutscene1 = true; cutscene2 = Conductor.songPosition / 1000;
+        if (cutscene != null) {cutscene.alpha = 1; cutscene.visible = true; cutscene.play();}
+    }
+
+    if (curStep == 796) {var chars = strumLines.members[0].characters;
+        if (chars.length > 2) {chars[1].visible = false; chars[2].visible = true;}
+        if (strumLines.members.length > 1)
+        {
+            var bfChars = strumLines.members[1].characters;
+
+            if (bfChars != null)
+            {
+                for (char in bfChars)
+                {
+                    if (char != null)
+                        char.alpha = 1;
+                }
+            }
+        }
+    }
+
+    if (curStep == 800) {
+        FlxTween.tween(saturationGame, {contrast: 1.0}, 6, {ease: FlxEase.circInOut});
+    }
+
+    if (curStep == 1055) {var chars = strumLines.members[0].characters; if (chars.length > 0) {
+        chars[0].visible = true; if (chars.length > 1) chars[1].visible = false;
+        if (chars.length > 2) chars[2].visible = false; if (chars.length > 3) chars[3].visible = false;
+    }}
+
+    if (curStep == 1200) {
+        FlxTween.tween(saturationGame, {contrast: 10}, 5, {ease: FlxEase.circInOut});
+        if (strumLines.members.length > 1) {var bfStrums = strumLines.members[1]; for (i in 0...bfStrums.members.length) {
+            var strum = bfStrums.members[i]; var delay = i * 0.08; var rotDir = (i % 2 == 0) ? 1 : -1;
+            FlxTween.tween(strum, {y: strum.y + 850,}, 2, {ease: FlxEase.quadIn, startDelay: delay, onComplete: function(twn) {FlxG.camera.shake(0.002, 0.05);}});
+            FlxTween.tween(strum.scale, {x: 0.6, y: 0.6}, 2, {startDelay: delay});
+        }}
+    }
+}
+
+function update(elapsed:Float) {
+    if (cutscene != null && cutscene1) {if ((Conductor.songPosition / 1000) - cutscene2 >= cutscene3) {
+        if (cutscene != null) {cutscene.stop(); remove(cutscene); cutscene.destroy(); cutscene = null; cutscene1 = false;}}
+    }
+}
+
+function onDadHit(event:NoteHitEvent) {if (ismania()) return; if (dad == null) return;
+    var chars = strumLines.members[0].characters;
+    var ativo = chars.length > 1 && (chars[1].visible || (chars.length > 2 && chars[2].visible));
+
+    if (ativo)
+    {
+        switch (event.direction)
+        {
+            case 0:
+                camHUD.angle = -0.8;
+                FlxTween.cancelTweensOf(camHUD);
+                FlxTween.tween(
+                    camHUD,
+                    {angle: 0},
+                    0.15,
+                    {ease: FlxEase.quadOut}
+                );
+
+            case 1:
+                camHUD.y = 2.5;
+                FlxTween.cancelTweensOf(camHUD);
+                FlxTween.tween(
+                    camHUD,
+                    {y: 0},
+                    0.15,
+                    {ease: FlxEase.quadOut}
+                );
+
+            case 2:
+                camHUD.y = -2.5;
+                FlxTween.cancelTweensOf(camHUD);
+                FlxTween.tween(
+                    camHUD,
+                    {y: 0},
+                    0.15,
+                    {ease: FlxEase.quadOut}
+                );
+
+            case 3:
+                camHUD.angle = 0.8;
+                FlxTween.cancelTweensOf(camHUD);
+                FlxTween.tween(
+                    camHUD,
+                    {angle: 0},
+                    0.15,
+                    {ease: FlxEase.quadOut}
+                );
+        }
+
+        // b3f3x3opt
+        camGame.shake(0.004, 0.06);
+
+        camGame.zoom += 0.012;
+        camHUD.zoom += 0.010;
+    }
+}
+
+function destroy() {
+    if (cutscene != null) {
+        cutscene.stop();
+        remove(cutscene);
+        cutscene.destroy();
+        cutscene = null;
+    }
+}

@@ -1,0 +1,43 @@
+import flixel.FlxState;
+import flixel.FlxG;
+import flixel.text.FlxText;
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+
+var title:FlxText;
+
+function create()
+{
+    // Background hitam
+    FlxG.camera.bgColor = 0xFF000000;
+
+    // Text
+    title = new FlxText(
+        0,
+        0,
+        FlxG.width,
+        "BFEXEOPT"
+    );
+
+    title.setFormat(
+        null,
+        64,
+        0xFFFFFFFF,
+        "center"
+    );
+
+    title.screenCenter();
+
+    add(title);
+
+    // Melayang naik-turun
+    FlxTween.tween(
+        title,
+        {y: title.y - 25},
+        2,
+        {
+            ease: FlxEase.sineInOut,
+            type: FlxTween.PINGPONG
+        }
+    );
+}

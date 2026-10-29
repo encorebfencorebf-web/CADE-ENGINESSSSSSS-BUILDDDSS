@@ -12,28 +12,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@main
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Install Linux build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            pkg-config \
-            libdbus-1-dev \
-            libudev-dev \
-            libasound2-dev \
-            libx11-dev \
-            libxext-dev \
-            libxrandr-dev \
-            libxcursor-dev \
-            libxi-dev \
-            libxinerama-dev \
-            libgl1-mesa-dev \
-            libglu1-mesa-dev
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
 
       - name: Setting up Haxe
         uses: krdlab/setup-haxe@v2
@@ -46,14 +34,33 @@ jobs:
         with:
           ndk-version: r25c
 
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            git \
+            libdbus-1-dev \
+            libudev-dev \
+            libasound2-dev \
+            libx11-dev \
+            libxext-dev \
+            libxrandr-dev \
+            libxcursor-dev \
+            libxi-dev \
+            libxinerama-dev \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev
+
       - name: Restore Previous Cache
         uses: actions/cache@v4
         with:
-          key: cache-build-android-${{ runner.os }}-${{ hashFiles('**/haxelib.json', 'project.xml', 'project/Project.xml') }}
+          key: cache-build-android-${{ runner.os }}-${{ hashFiles('**/haxelib.json', 'project.xml', 'building/libs.xml') }}
           restore-keys: |
             cache-build-android-${{ runner.os }}-
           path: |
-            ~/.gradle
+            ~/.gradle/
             ~/.haxelib/
             .haxelib/
             export/release/android/haxe/
@@ -72,64 +79,144 @@ jobs:
           haxelib set flixel-animate git
           haxelib set hxdiscord_rpc git
 
-      - name: Initialize Lime ImGui submodule
+      - name: Initialize Lime submodules
+        shell: bash
         run: |
-          git -C .haxelib/lime/git submodule update --init --recursive project/lib/imgui
+          set -euo pipefail
 
-          echo "=== Verify ImGui headers ==="
-          find .haxelib/lime/git/project/lib/imgui \
+          LIME_DIR=".haxelib/lime/git"
+
+          if [ ! -d "$LIME_DIR/.git" ]; then
+            echo "ERROR: Lime Git repository not found at $LIME_DIR"
+            exit 1
+          fi
+
+          git -C "$LIME_DIR" submodule sync --recursive
+          git -C "$LIME_DIR" submodule update --init --recursive
+
+          echo "=== ImGui headers ==="
+          find "$LIME_DIR/project/lib/imgui" \
             -type f \( -name imgui.h -o -name imgui_internal.h \) -print
 
-          test -f .haxelib/lime/git/project/lib/imgui/imgui.h
-          test -f .haxelib/lime/git/project/lib/imgui/imgui_internal.h
+          test -f "$LIME_DIR/project/lib/imgui/imgui.h"
+          test -f "$LIME_DIR/project/lib/imgui/imgui_internal.h"
 
-      - name: Diagnose dependencies
+          echo "=== SDL submodule ==="
+          test -f "$LIME_DIR/project/lib/sdl/CMakeLists.txt"
+
+          git -C "$LIME_DIR" submodule status --recursive
+
+      - name: Install Android tools extension
+        shell: bash
         run: |
-          echo "=== Haxe version ==="
+          set -euo pipefail
+
+          haxelib install extension-androidtools 2.2.2
+
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          path = Path("project.xml")
+          xml = path.read_text(encoding="utf-8")
+
+          tag = '<haxelib name="extension-androidtools" if="android"/>'
+
+          if not re.search(
+              r'<haxelib\b[^>]*\bname=["\']extension-androidtools["\']',
+              xml
+          ):
+              match = re.search(
+                  r'<haxelib\b[^>]*\bname=["\']flixel-animate["\'][^>]*/>',
+                  xml
+              )
+
+              if not match:
+                  raise SystemExit(
+                      "ERROR: Cannot find flixel-animate haxelib "
+                      "entry in project.xml."
+                  )
+
+              xml = xml[:match.end()] + "\n\t" + tag + xml[match.end():]
+              path.write_text(xml, encoding="utf-8")
+
+          print("Android tools dependency is declared in project.xml.")
+          PY
+
+      - name: Diagnose Android environment
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "=== Haxe ==="
           haxe --version
 
-          echo "=== Haxelib packages ==="
+          echo "=== Java ==="
+          java -version
+
+          echo "=== Haxelib ==="
           haxelib list
 
-          echo "=== D-Bus header ==="
-          test -f /usr/include/dbus-1.0/dbus/dbus.h
+          echo "=== Android SDK ==="
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          test -d "$ANDROID_HOME"
+          ls -la "$ANDROID_HOME"
 
-          echo "=== ImGui submodule status ==="
-          git -C .haxelib/lime/git submodule status project/lib/imgui
+          echo "=== Android NDK ==="
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
+          test -f "$ANDROID_NDK_HOME/source.properties"
+          grep "Pkg.Revision" "$ANDROID_NDK_HOME/source.properties"
 
-          echo "=== ImGui header files ==="
-          ls -la .haxelib/lime/git/project/lib/imgui/
-
-      - name: Build Lime native library
-        run: |
-          haxelib run lime rebuild linux -release
+          echo "=== Lime submodule status ==="
+          git -C .haxelib/lime/git submodule status --recursive
 
       - name: Configure Android
+        shell: bash
         run: |
+          set -euo pipefail
+
           haxelib run lime setup -alias -y
           haxelib run lime config ANDROID_SDK "$ANDROID_HOME"
           haxelib run lime config ANDROID_NDK_ROOT "$ANDROID_NDK_HOME"
-          haxelib run lime config JAVA_HOME "$JAVA_HOME_17_X64"
+          haxelib run lime config JAVA_HOME "$JAVA_HOME"
           haxelib run lime config ANDROID_SETUP true
 
       - name: Building the game
+        shell: bash
         run: |
+          set -euo pipefail
+
           haxelib run lime build android -final -D ONLY_ARM64
 
-      - name: Uploading artifact (entire build)
+      - name: Verify APK
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          APK_DIR="export/release/android/bin/app/build/outputs/apk"
+
+          echo "=== Searching for APK files ==="
+          find "$APK_DIR" -type f -name "*.apk" -print
+
+          if ! find "$APK_DIR" -type f -name "*.apk" -print -quit | grep -q .; then
+            echo "ERROR: Build finished without producing an APK."
+            exit 1
+          fi
+
+      - name: Uploading artifact
         uses: actions/upload-artifact@v4
         with:
           name: Codename Engine Android
-          path: export/release/android/bin/app/build/outputs/apk/release/*.apk
+          path: export/release/android/bin/app/build/outputs/apk/**/*.apk
           if-no-files-found: error
 
-      - name: Upload New Cache
+      - name: Save Build Cache
         if: success()
         uses: actions/cache/save@v4
         with:
-          key: cache-build-android-${{ runner.os }}-${{ hashFiles('**/haxelib.json', 'project.xml', 'project/Project.xml') }}
+          key: cache-build-android-${{ runner.os }}-${{ hashFiles('**/haxelib.json', 'project.xml', 'building/libs.xml') }}
           path: |
-            ~/.gradle
+            ~/.gradle/
             ~/.haxelib/
             .haxelib/
             export/release/android/haxe/

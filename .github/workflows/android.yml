@@ -36,7 +36,7 @@ jobs:
             .haxelib/
             /home/runner/haxelib/
             /Users/runner/haxelib/
-            C:/hostedtoolcache/haxe/4.3.6/x64/lib/
+            C:/hostedtoolcache/windows/haxe/4.3.6/x64/lib/
             ~/.haxelib/
             export/release/android/haxe/
             export/release/android/obj/
@@ -61,6 +61,24 @@ jobs:
           haxelib set flixel-animate git
           haxelib set hxdiscord_rpc git
 
+      - name: Initialize Lime ImGui submodule
+        run: |
+          git -C .haxelib/lime/git submodule update --init --recursive project/lib/imgui
+
+          echo "=== Verify ImGui headers ==="
+          find .haxelib/lime/git/project/lib/imgui \
+            -type f \( -name imgui.h -o -name imgui_internal.h \) -print
+
+          test -f .haxelib/lime/git/project/lib/imgui/imgui.h || {
+            echo "ERROR: imgui.h is still missing after submodule initialization."
+            exit 1
+          }
+
+          test -f .haxelib/lime/git/project/lib/imgui/imgui_internal.h || {
+            echo "ERROR: imgui_internal.h is still missing."
+            exit 1
+          }
+
       - name: Diagnose ImGui
         run: |
           echo "=== Haxe version ==="
@@ -69,26 +87,11 @@ jobs:
           echo "=== Haxelib packages ==="
           haxelib list
 
-          echo "=== Searching for imgui.h ==="
-          find . "$HOME/.haxelib" /home/runner/haxelib \
-            -type f -name imgui.h -print 2>/dev/null || true
+          echo "=== ImGui submodule status ==="
+          git -C .haxelib/lime/git submodule status project/lib/imgui
 
-          echo "=== Searching for ImGuiBindings.cpp ==="
-          find . "$HOME/.haxelib" /home/runner/haxelib \
-            -type f -name ImGuiBindings.cpp -print 2>/dev/null || true
-
-          echo "=== ImGui directory ==="
-          ls -la .haxelib/lime/git/project/lib/imgui/ 2>/dev/null || true
-
-          echo "=== Git submodules ==="
-          git -C .haxelib/lime/git submodule status || true
-
-          echo "=== ImGui references ==="
-          grep -R "imgui" -n \
-            .haxelib/lime/git/project/CMakeLists.txt \
-            .haxelib/lime/git/project/project.xml \
-            .haxelib/lime/git/project/src/tools/imgui \
-            2>/dev/null | head -80 || true
+          echo "=== ImGui header files ==="
+          ls -la .haxelib/lime/git/project/lib/imgui/
 
       - name: Build Lime native library
         run: |
@@ -141,7 +144,7 @@ jobs:
             .haxelib/
             /home/runner/haxelib/
             /Users/runner/haxelib/
-            C:/hostedtoolcache/haxe/4.3.6/x64/lib/
+            C:/hostedtoolcache/windows/haxe/4.3.6/x64/lib/
             ~/.haxelib/
             export/release/android/haxe/
             export/release/android/obj/

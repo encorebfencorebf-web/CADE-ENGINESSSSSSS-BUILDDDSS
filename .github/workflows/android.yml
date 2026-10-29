@@ -17,24 +17,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Setting up Haxe
-        uses: krdlab/setup-haxe@v2
-        with:
-          haxe-version: 4.3.7
-
-      - name: Setup Android NDK
-        id: setup-ndk
-        uses: nttld/setup-ndk@main
-        with:
-          ndk-version: r25c
-
-      - name: Install build dependencies
+      - name: Install Linux dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -53,25 +36,44 @@ jobs:
             libgl1-mesa-dev \
             libglu1-mesa-dev
 
-      - name: Restore Previous Cache
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@v2
+        with:
+          haxe-version: 4.3.7
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@main
+        with:
+          ndk-version: r25c
+
+      - name: Restore Build Cache
         uses: actions/cache@v4
         with:
-          key: cache-build-android-${{ runner.os }}-${{ hashFiles('**/haxelib.json', 'project.xml', 'building/libs.xml') }}
+          key: cache-build-android-${{ runner.os }}-${{ hashFiles('**/haxelib.json', 'project.xml', 'project/Project.xml') }}
           restore-keys: |
             cache-build-android-${{ runner.os }}-
           path: |
-            ~/.gradle/
+            ~/.gradle
             ~/.haxelib/
             .haxelib/
             export/release/android/haxe/
             export/release/android/obj/
 
-      - name: Installing/Updating libraries
+      - name: Install CNE libraries
         run: |
+          set -euo pipefail
           haxe -cp commandline -D analyzer-optimize --run Main setup -s
 
-      - name: Fix Haxelib
+      - name: Select CNE library versions
         run: |
+          set -euo pipefail
+
           haxelib set lime git
           haxelib set hxcpp git
           haxelib set flixel git
@@ -80,70 +82,126 @@ jobs:
           haxelib set hxdiscord_rpc git
 
       - name: Initialize Lime submodules
-        shell: bash
         run: |
           set -euo pipefail
 
           LIME_DIR=".haxelib/lime/git"
 
           if [ ! -d "$LIME_DIR/.git" ]; then
-            echo "ERROR: Lime Git repository not found at $LIME_DIR"
+            echo "::error::CNE Lime Git directory not found: $LIME_DIR"
             exit 1
           fi
 
           git -C "$LIME_DIR" submodule sync --recursive
           git -C "$LIME_DIR" submodule update --init --recursive
 
-          echo "=== ImGui headers ==="
-          find "$LIME_DIR/project/lib/imgui" \
-            -type f \( -name imgui.h -o -name imgui_internal.h \) -print
-
           test -f "$LIME_DIR/project/lib/imgui/imgui.h"
           test -f "$LIME_DIR/project/lib/imgui/imgui_internal.h"
 
-          echo "=== SDL submodule ==="
-          test -f "$LIME_DIR/project/lib/sdl/CMakeLists.txt"
-
-          git -C "$LIME_DIR" submodule status --recursive
-
-      - name: Install Android tools extension
+      - name: Restore Lime native library
         shell: bash
         run: |
           set -euo pipefail
 
+          LIME_DIR=".haxelib/lime/git"
+          TARGET_NDLL="$LIME_DIR/ndll"
+
+          # Lime installed from Git does not include lime.ndll.
+          # Install the Haxelib release to obtain the native tools.
+          haxelib install lime
+
+          # Re-select the CNE fork after installing the release.
+          haxelib set lime git
+
+          HAXELIB_REPO="$(haxelib config)"
+          LIME_NDLL=""
+
+          for ROOT in "$HAXELIB_REPO" ".haxelib" "$HOME/.haxelib"; do
+            [ -d "$ROOT/lime" ] || continue
+
+            LIME_NDLL="$(
+              find "$ROOT/lime" \
+                -type f \
+                -name lime.ndll \
+                ! -path '*/git/*' \
+                -print -quit 2>/dev/null || true
+            )"
+
+            if [ -n "$LIME_NDLL" ]; then
+              break
+            fi
+          done
+
+          if [ -z "$LIME_NDLL" ]; then
+            echo "::error::Could not find lime.ndll in the installed Haxelib release."
+            echo "Searching for available Lime native libraries:"
+            find "$HAXELIB_REPO" -type f -name lime.ndll -print || true
+            exit 1
+          fi
+
+          SOURCE_NDLL="$(dirname "$(dirname "$LIME_NDLL")")"
+
+          echo "Native library source: $SOURCE_NDLL"
+          echo "CNE Lime target: $TARGET_NDLL"
+
+          mkdir -p "$TARGET_NDLL"
+          cp -a "$SOURCE_NDLL/." "$TARGET_NDLL/"
+
+          echo "=== Verify copied native libraries ==="
+          find "$TARGET_NDLL" -type f -name lime.ndll -print
+
+          if [ ! -f "$TARGET_NDLL/Linux64/lime.ndll" ] &&
+             [ ! -f "$TARGET_NDLL/Linux/lime.ndll" ]; then
+            echo "::error::lime.ndll was not copied to the expected Linux directory."
+            exit 1
+          fi
+
+      - name: Install Android tools extension
+        run: |
+          set -euo pipefail
           haxelib install extension-androidtools 2.2.2
 
-          python3 - <<'PY'
-          import re
+      - name: Enable Android tools extension
+        shell: python
+        run: |
           from pathlib import Path
 
           path = Path("project.xml")
-          xml = path.read_text(encoding="utf-8")
 
-          tag = '<haxelib name="extension-androidtools" if="android"/>'
+          if not path.exists():
+              raise SystemExit("project.xml was not found.")
 
-          if not re.search(
-              r'<haxelib\b[^>]*\bname=["\']extension-androidtools["\']',
-              xml
-          ):
-              match = re.search(
-                  r'<haxelib\b[^>]*\bname=["\']flixel-animate["\'][^>]*/>',
-                  xml
-              )
+          content = path.read_text(encoding="utf-8")
+          dependency = '<haxelib name="extension-androidtools" if="android"/>'
 
-              if not match:
+          if dependency not in content:
+              anchor = '<haxelib name="flixel-animate"'
+              position = content.find(anchor)
+
+              if position == -1:
                   raise SystemExit(
-                      "ERROR: Cannot find flixel-animate haxelib "
-                      "entry in project.xml."
+                      "Could not find flixel-animate in project.xml. "
+                      "Add the Android tools dependency manually."
                   )
 
-              xml = xml[:match.end()] + "\n\t" + tag + xml[match.end():]
-              path.write_text(xml, encoding="utf-8")
+              end = content.find("\n", position)
 
-          print("Android tools dependency is declared in project.xml.")
-          PY
+              if end == -1:
+                  content += "\n" + dependency + "\n"
+              else:
+                  content = (
+                      content[:end + 1]
+                      + "    "
+                      + dependency
+                      + "\n"
+                      + content[end + 1:]
+                  )
 
-      - name: Diagnose Android environment
+              path.write_text(content, encoding="utf-8")
+
+          print("Android tools dependency is configured.")
+
+      - name: Diagnose build environment
         shell: bash
         run: |
           set -euo pipefail
@@ -154,21 +212,25 @@ jobs:
           echo "=== Java ==="
           java -version
 
-          echo "=== Haxelib ==="
-          haxelib list
-
           echo "=== Android SDK ==="
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          test -d "$ANDROID_HOME"
-          ls -la "$ANDROID_HOME"
+          echo "${ANDROID_HOME:-not set}"
 
           echo "=== Android NDK ==="
-          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
-          test -f "$ANDROID_NDK_HOME/source.properties"
-          grep "Pkg.Revision" "$ANDROID_NDK_HOME/source.properties"
+          echo "${ANDROID_NDK_HOME:-not set}"
 
-          echo "=== Lime submodule status ==="
-          git -C .haxelib/lime/git submodule status --recursive
+          echo "=== Haxelib packages ==="
+          haxelib list
+
+          echo "=== D-Bus header ==="
+          test -f /usr/include/dbus-1.0/dbus/dbus.h
+
+          echo "=== Lime native library ==="
+          find .haxelib/lime/git/ndll \
+            -type f -name lime.ndll -print
+
+          echo "=== ImGui headers ==="
+          test -f .haxelib/lime/git/project/lib/imgui/imgui.h
+          test -f .haxelib/lime/git/project/lib/imgui/imgui_internal.h
 
       - name: Configure Android
         shell: bash
@@ -181,43 +243,36 @@ jobs:
           haxelib run lime config JAVA_HOME "$JAVA_HOME"
           haxelib run lime config ANDROID_SETUP true
 
-      - name: Building the game
+      - name: Build Android APK
         shell: bash
         run: |
           set -euo pipefail
 
           haxelib run lime build android -final -D ONLY_ARM64
 
-      - name: Verify APK
+      - name: Locate APK
+        id: apk
         shell: bash
         run: |
           set -euo pipefail
 
-          APK_DIR="export/release/android/bin/app/build/outputs/apk"
+          APK="$(find export/release/android \
+            -type f -name '*.apk' -print -quit 2>/dev/null || true)"
 
-          echo "=== Searching for APK files ==="
-          find "$APK_DIR" -type f -name "*.apk" -print
-
-          if ! find "$APK_DIR" -type f -name "*.apk" -print -quit | grep -q .; then
-            echo "ERROR: Build finished without producing an APK."
+          if [ -z "$APK" ]; then
+            echo "::error::Build finished but no APK was found."
+            echo "Searching for build outputs:"
+            find export -type f \( -name '*.apk' -o -name '*.aab' \) -print || true
             exit 1
           fi
 
-      - name: Uploading artifact
+          echo "Found APK: $APK"
+          echo "path=$APK" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
-          name: Codename Engine Android
-          path: export/release/android/bin/app/build/outputs/apk/**/*.apk
+          name: Codename-Engine-Android
+          path: ${{ steps.apk.outputs.path }}
           if-no-files-found: error
-
-      - name: Save Build Cache
-        if: success()
-        uses: actions/cache/save@v4
-        with:
-          key: cache-build-android-${{ runner.os }}-${{ hashFiles('**/haxelib.json', 'project.xml', 'building/libs.xml') }}
-          path: |
-            ~/.gradle/
-            ~/.haxelib/
-            .haxelib/
-            export/release/android/haxe/
-            export/release/android/obj/
+          retention-days: 7

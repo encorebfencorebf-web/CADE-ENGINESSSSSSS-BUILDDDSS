@@ -1,278 +1,242 @@
-
 name: Android Build
-
 on:
   workflow_dispatch:
-  workflow_call:
-
+    inputs:
+      release:
+        description: "Buat GitHub Release dari APK"
+        type: boolean
+        default: false
 jobs:
   build:
-    name: Android Build
-    runs-on: ubuntu-latest
-
+    name: Android Build (Haxe ${{ matrix.haxe }})
+    permissions: write-all
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        haxe: ["4.3.7", "4.2.5"]
     steps:
-      - name: Checkout
+      - name: Pulling the new commit
         uses: actions/checkout@v4
+      - name: Setting up Haxe
+        uses: krdlab/setup-haxe@v1
         with:
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Install Linux dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            pkg-config \
-            git \
-            libdbus-1-dev \
-            libudev-dev \
-            libasound2-dev \
-            libx11-dev \
-            libxext-dev \
-            libxrandr-dev \
-            libxcursor-dev \
-            libxi-dev \
-            libxinerama-dev \
-            libgl1-mesa-dev \
-            libglu1-mesa-dev
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Setup Haxe
-        uses: krdlab/setup-haxe@v2
-        with:
-          haxe-version: 4.3.7
-
+          haxe-version: ${{ matrix.haxe }}
       - name: Setup Android NDK
+        id: setup-ndk
         uses: nttld/setup-ndk@main
         with:
           ndk-version: r25c
-
-      - name: Restore Build Cache
-        uses: actions/cache@v4
+      - name: Restore Previous Cache
+        id: cache-debug-build-android-restore
+        uses: actions/cache/restore@main
         with:
-          key: cache-build-android-${{ runner.os }}-${{ hashFiles('**/haxelib.json', 'project.xml', 'project/Project.xml') }}
-          restore-keys: |
-            cache-build-android-${{ runner.os }}-
           path: |
-            ~/.gradle
-            ~/.haxelib/
             .haxelib/
             export/release/android/haxe/
             export/release/android/obj/
-
-      - name: Install CNE libraries
+          key: cache-android-build-${{ matrix.haxe }}-solver
+      - name: Installing libraries
         run: |
-          set -euo pipefail
           haxe -cp commandline -D analyzer-optimize --run Main setup -s
 
-      - name: Select CNE library versions
+      - name: Solver build
         run: |
-          set -euo pipefail
+          git config --global advice.detachedHead false
+          ROOT=$(pwd)
+          LIBS="$ROOT/.haxelib"
+          fl="$LIBS/flixel/git"; ad="$LIBS/flixel-addons/git"
+          hs="$LIBS/hscript-improved/git"; hx="$LIBS/hxcpp/git"
+          TRACE="$ROOT/trace.txt"; : > "$TRACE"
+          SEEN="$ROOT/seen.txt";   : > "$SEEN"
 
-          haxelib set lime git
-          haxelib set hxcpp git
-          haxelib set flixel git
-          haxelib set flixel-addons git
-          haxelib set flixel-animate git
-          haxelib set hxdiscord_rpc git
+          for r in "$fl" "$ad" "$hs" "$hx"; do git -C "$r" fetch -q --all || true; done
 
-      - name: Initialize Lime submodules
-        run: |
-          set -euo pipefail
+          # --- titik acuan ---
+          FL_ORIG=$(git -C "$fl" rev-parse HEAD)
+          AD_ORIG=$(git -C "$ad" rev-parse HEAD)
+          HS_ORIG=$(git -C "$hs" rev-parse HEAD)
+          AD_DEV=$(git -C "$ad" rev-parse origin/dev 2>/dev/null || echo "$AD_ORIG")
+          A=$(git -C "$hs" log --format=%H -S"IMPORT_BLACKLIST" origin/codename-dev 2>/dev/null | tail -1)
+          if [ -n "$A" ]; then
+            HS_BEFORE=$(git -C "$hs" rev-parse "${A}^")
+          else
+            HS_BEFORE=$(git -C "$hs" rev-parse origin/codename-dev 2>/dev/null || echo "$HS_ORIG")
+          fi
+          hs_ref() {
+            case $HSI in
+              0) echo "$HS_ORIG" ;;
+              1) echo "$HS_BEFORE" ;;
+              2) git -C "$hs" rev-parse origin/codename-dev ;;
+              *) git -C "$hs" rev-parse origin/master ;;
+            esac
+          }
 
-          LIME_DIR=".haxelib/lime/git"
+          # --- state awal ---
+          FL=$(git -C "$fl" rev-parse origin/old 2>/dev/null || echo "$FL_ORIG")
+          AD=$AD_ORIG; UI=2.6.1; HSI=0; LO=fork; FLWALK=0; AUDIOFIX=0
 
-          if [ ! -d "$LIME_DIR/.git" ]; then
-            echo "::error::CNE Lime Git directory not found: $LIME_DIR"
-            exit 1
+          ver() {
+            sed -n 's/.*"version"[^"]*"\([^"]*\)".*/\1/p' "$LIBS/$1/git/haxelib.json" 2>/dev/null | head -1
+          }
+
+          apply_state() {
+            git -C "$ROOT" checkout -- source 2>/dev/null || true
+            git -C "$fl" checkout -q -f "$FL" || true
+            git -C "$ad" checkout -q -f "$AD" || true
+            git -C "$hs" checkout -q -f "$(hs_ref)" || true
+            haxelib install flixel-ui "$UI" --skip-dependencies > /dev/null 2>&1 || haxelib install flixel-ui "$UI" > /dev/null 2>&1 || true
+            haxelib set flixel git > /dev/null || true
+            haxelib set flixel-addons git > /dev/null || true
+            haxelib set hscript-improved git > /dev/null || true
+            haxelib set flixel-ui "$UI" > /dev/null || true
+            case $LO in
+              fork)  haxelib set lime git > /dev/null;   haxelib set openfl git > /dev/null ;;
+              mixo)  haxelib set lime 8.3.2 > /dev/null; haxelib set openfl git > /dev/null ;;
+              official) haxelib set lime 8.3.2 > /dev/null; haxelib set openfl 9.5.2 > /dev/null ;;
+            esac
+            # patch Framerate (Int/Float) dan flixel-ui (INPUT_KEYS)
+            for F in source/funkin/backend/system/framerate/Framerate.hx source/funkin/backend/system/framerate/FramerateCategory.hx; do
+              if [ -f "$ROOT/$F" ]; then
+                sed -i -E 's/(__enterFrame[[:space:]]*\([[:space:]]*[A-Za-z_]+[[:space:]]*:[[:space:]]*)Float/\1Int/' "$ROOT/$F" || true
+              fi
+            done
+            for F in $(find "$LIBS/flixel-ui" -name FlxUICursor.hx); do
+              sed -i 's/InputMethod:Int = INPUT_KEYS/InputMethod:Int = 1/' "$F" || true
+            done
+          }
+
+          attempt() {
+            rm -rf "$ROOT/export"
+            ( set -o pipefail; haxelib run lime build android -final 2>&1 | tee build.log ) &
+            PID=$!
+            PASSED=0
+            for i in $(seq 1 24); do
+              sleep 5
+              kill -0 $PID 2>/dev/null || break
+            done
+            if kill -0 $PID 2>/dev/null; then
+              PASSED=1
+              echo ">>> LOLOS pemeriksaan Haxe, lanjut build penuh (sekitar 50 menit)"
+            fi
+            wait $PID && RC=0 || RC=$?
+          }
+
+          learn() {
+            CH=0; L=build.log
+            if grep -q "Unsupported Flixel Addons version" $L && [ "$AD" != "$AD_DEV" ]; then
+              AD=$AD_DEV; CH=1; echo "iter $IT: addons -> dev" >> "$TRACE"
+            fi
+            if grep -q "Unsupported Flixel UI version" $L && [ "$UI" != "2.6.4" ]; then
+              UI=2.6.4; CH=1; echo "iter $IT: flixel-ui -> 2.6.4" >> "$TRACE"
+            fi
+            if grep -q "Unexpected #end" $L && [ "$FLWALK" -lt 30 ]; then
+              FL=$(git -C "$fl" rev-parse "${FL}^" 2>/dev/null || echo "$FL")
+              FLWALK=$((FLWALK+1)); CH=1; echo "iter $IT: flixel mundur 1 commit ($FLWALK)" >> "$TRACE"
+            fi
+            if grep -qE "Loop in class building|IMPORT_BLACKLIST" $L && [ "$HSI" -lt 3 ]; then
+              HSI=$((HSI+1)); CH=1; echo "iter $IT: hscript-improved -> mode $HSI" >> "$TRACE"
+            fi
+            if grep -q "Type not found : lime.media.Audio" $L && [ "$AUDIOFIX" = "0" ]; then
+              FL=$(git -C "$fl" rev-list -n 1 --before="2026-02-26 00:00:00" "$FL" 2>/dev/null || echo "$FL")
+              AUDIOFIX=1; CH=1; echo "iter $IT: flixel sebelum audio rework" >> "$TRACE"
+            fi
+            if grep -q "has no field __clear" $L && [ "$LO" != "fork" ]; then
+              LO=fork; CH=1; echo "iter $IT: lime/openfl -> fork" >> "$TRACE"
+            fi
+          }
+
+          # --- setup Android + rebuild hxcpp ---
+          haxelib run lime setup -alias -y > /dev/null
+          haxelib run lime config ANDROID_SDK $ANDROID_HOME > /dev/null
+          haxelib run lime config ANDROID_NDK_ROOT $ANDROID_NDK_HOME > /dev/null
+          haxelib run lime config JAVA_HOME $JAVA_HOME_17_X64 > /dev/null
+          haxelib run lime config ANDROID_SETUP true > /dev/null
+
+          if ! haxelib run lime rebuild hxcpp > rebuild.log 2>&1; then
+            echo "hxcpp terbaru gagal, pin ke sebelum 2026-01-22" >> "$TRACE"
+            T=$(git -C "$hx" rev-list -n 1 --before="2026-01-22 23:59:59" HEAD 2>/dev/null || true)
+            if [ -n "$T" ]; then git -C "$hx" checkout -q -f "$T" || true; fi
+            if ! haxelib run lime rebuild hxcpp > rebuild.log 2>&1; then
+              echo "=== rebuild hxcpp gagal ==="
+              grep -E "characters|Error" rebuild.log | head -3 | cut -c1-170
+              exit 1
+            fi
           fi
 
-          git -C "$LIME_DIR" submodule sync --recursive
-          git -C "$LIME_DIR" submodule update --init --recursive
+          # --- loop solver ---
+          FOUND=0; IT=0
+          while [ "$IT" -lt 40 ]; do
+            IT=$((IT+1))
+            SIG=$(echo "$FL $AD $UI $HSI $LO" | sha1sum | cut -c1-12)
+            if grep -q "^$SIG$" "$SEEN"; then echo "state berulang, berhenti" >> "$TRACE"; break; fi
+            echo "$SIG" >> "$SEEN"
 
-          test -f "$LIME_DIR/project/lib/imgui/imgui.h"
-          test -f "$LIME_DIR/project/lib/imgui/imgui_internal.h"
-
-      - name: Restore Lime native library
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          LIME_DIR=".haxelib/lime/git"
-          TARGET_NDLL="$LIME_DIR/ndll"
-
-          # Lime installed from Git does not include lime.ndll.
-          # Install the Haxelib release to obtain the native tools.
-          haxelib install lime
-
-          # Re-select the CNE fork after installing the release.
-          haxelib set lime git
-
-          HAXELIB_REPO="$(haxelib config)"
-          LIME_NDLL=""
-
-          for ROOT in "$HAXELIB_REPO" ".haxelib" "$HOME/.haxelib"; do
-            [ -d "$ROOT/lime" ] || continue
-
-            LIME_NDLL="$(
-              find "$ROOT/lime" \
-                -type f \
-                -name lime.ndll \
-                ! -path '*/git/*' \
-                -print -quit 2>/dev/null || true
-            )"
-
-            if [ -n "$LIME_NDLL" ]; then
+            apply_state
+            echo "### iter $IT flixel=$(echo $FL | cut -c1-7) addons=$(ver flixel-addons) ui=$UI hs=$HSI lo=$LO"
+            attempt
+            if [ "$RC" = "0" ]; then FOUND=1; echo "BERHASIL pada iter $IT"; break; fi
+            if [ "$PASSED" = "1" ]; then
+              echo "[LOLOS Haxe tapi gagal di tahap lanjut]" >> "$TRACE"
+              grep -iE "error" build.log | tail -6 | cut -c1-200 >> "$TRACE" || true
               break
             fi
+            learn
+            if [ "$CH" = "0" ]; then echo "tidak ada aturan yang cocok, berhenti" >> "$TRACE"; break; fi
           done
 
-          if [ -z "$LIME_NDLL" ]; then
-            echo "::error::Could not find lime.ndll in the installed Haxelib release."
-            echo "Searching for available Lime native libraries:"
-            find "$HAXELIB_REPO" -type f -name lime.ndll -print || true
+          echo ""
+          echo "=========== RINGKASAN (iter $IT) ==========="
+          cat "$TRACE" | tee -a "$GITHUB_STEP_SUMMARY"
+          if [ "$FOUND" != "1" ]; then
+            echo "--- error terakhir ---"
+            grep -E "characters [0-9]+-[0-9]+ : |lines [0-9]+-[0-9]+ : |Error" build.log | grep -v "Warning" | sort -u | head -8 | sed -E 's#^.*/\.haxelib/##; s#characters [0-9]+-[0-9]+ ##' | cut -c1-170 | tee -a "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
 
-          SOURCE_NDLL="$(dirname "$(dirname "$LIME_NDLL")")"
-
-          echo "Native library source: $SOURCE_NDLL"
-          echo "CNE Lime target: $TARGET_NDLL"
-
-          mkdir -p "$TARGET_NDLL"
-          cp -a "$SOURCE_NDLL/." "$TARGET_NDLL/"
-
-          echo "=== Verify copied native libraries ==="
-          find "$TARGET_NDLL" -type f -name lime.ndll -print
-
-          if [ ! -f "$TARGET_NDLL/Linux64/lime.ndll" ] &&
-             [ ! -f "$TARGET_NDLL/Linux/lime.ndll" ]; then
-            echo "::error::lime.ndll was not copied to the expected Linux directory."
-            exit 1
-          fi
-
-      - name: Install Android tools extension
-        run: |
-          set -euo pipefail
-          haxelib install extension-androidtools 2.2.2
-
-      - name: Enable Android tools extension
-        shell: python
-        run: |
-          from pathlib import Path
-
-          path = Path("project.xml")
-
-          if not path.exists():
-              raise SystemExit("project.xml was not found.")
-
-          content = path.read_text(encoding="utf-8")
-          dependency = '<haxelib name="extension-androidtools" if="android"/>'
-
-          if dependency not in content:
-              anchor = '<haxelib name="flixel-animate"'
-              position = content.find(anchor)
-
-              if position == -1:
-                  raise SystemExit(
-                      "Could not find flixel-animate in project.xml. "
-                      "Add the Android tools dependency manually."
-                  )
-
-              end = content.find("\n", position)
-
-              if end == -1:
-                  content += "\n" + dependency + "\n"
-              else:
-                  content = (
-                      content[:end + 1]
-                      + "    "
-                      + dependency
-                      + "\n"
-                      + content[end + 1:]
-                  )
-
-              path.write_text(content, encoding="utf-8")
-
-          print("Android tools dependency is configured.")
-
-      - name: Diagnose build environment
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          echo "=== Haxe ==="
-          haxe --version
-
-          echo "=== Java ==="
-          java -version
-
-          echo "=== Android SDK ==="
-          echo "${ANDROID_HOME:-not set}"
-
-          echo "=== Android NDK ==="
-          echo "${ANDROID_NDK_HOME:-not set}"
-
-          echo "=== Haxelib packages ==="
-          haxelib list
-
-          echo "=== D-Bus header ==="
-          test -f /usr/include/dbus-1.0/dbus/dbus.h
-
-          echo "=== Lime native library ==="
-          find .haxelib/lime/git/ndll \
-            -type f -name lime.ndll -print
-
-          echo "=== ImGui headers ==="
-          test -f .haxelib/lime/git/project/lib/imgui/imgui.h
-          test -f .haxelib/lime/git/project/lib/imgui/imgui_internal.h
-
-      - name: Configure Android
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          haxelib run lime setup -alias -y
-          haxelib run lime config ANDROID_SDK "$ANDROID_HOME"
-          haxelib run lime config ANDROID_NDK_ROOT "$ANDROID_NDK_HOME"
-          haxelib run lime config JAVA_HOME "$JAVA_HOME"
-          haxelib run lime config ANDROID_SETUP true
-
-      - name: Build Android APK
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          haxelib run lime build android -final -D ONLY_ARM64
-
-      - name: Locate APK
-        id: apk
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          APK="$(find export/release/android \
-            -type f -name '*.apk' -print -quit 2>/dev/null || true)"
-
-          if [ -z "$APK" ]; then
-            echo "::error::Build finished but no APK was found."
-            echo "Searching for build outputs:"
-            find export -type f \( -name '*.apk' -o -name '*.aab' \) -print || true
-            exit 1
-          fi
-
-          echo "Found APK: $APK"
-          echo "path=$APK" >> "$GITHUB_OUTPUT"
-
-      - name: Upload Android APK
+      - name: Clear Previous Cache
+        uses: actions/github-script@main
+        with:
+          script: |
+            try {
+              const caches = await github.rest.actions.getActionsCacheList({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              })
+              if (typeof caches.data.actions_caches != null && caches.data.actions_caches.length > 0) {
+                for (const cache of caches.data.actions_caches) {
+                  if (cache.key == "cache-android-build-${{ matrix.haxe }}-solver") {
+                    console.log('Clearing ' + cache.key + '...')
+                    await github.rest.actions.deleteActionsCacheById({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      cache_id: cache.id,
+                    })
+                    console.log("Previous Cache Cleared!")
+                  }
+                }
+              }
+            } catch (error) {
+              console.log(error.message);
+            }
+      - name: Save Current Cache
+        id: cache-release-build-android-save
+        uses: actions/cache/save@main
+        with:
+          path: |
+            .haxelib/
+            export/release/android/haxe/
+            export/release/android/obj/
+          key: cache-android-build-${{ matrix.haxe }}-solver
+      - name: Uploading artifact (entire build)
         uses: actions/upload-artifact@v4
         with:
-          name: Codename-Engine-Android
-          path: ${{ steps.apk.outputs.path }}
-          if-no-files-found: error
-          retention-days: 7
+          name: Codename Engine Android (Haxe ${{ matrix.haxe }})
+          path: export/release/android/bin/app/build/outputs/apk/*
+      - name: Create release
+        if: success() && inputs.release == true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-build-${{ github.run_number }}-haxe${{ matrix.haxe }}
+          name: Codename Engine Android #${{ github.run_number }} (Haxe ${{ matrix.haxe }})
+          files: export/release/android/bin/app/build/outputs/apk/**/*.apk
